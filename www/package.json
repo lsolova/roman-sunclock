@@ -1,0 +1,22 @@
+{
+  "name": "roman-clock",
+  "version": "1.0.0",
+  "description": "Roman Sun Clock",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.config.js",
+    "start": "webpack-dev-server"
+  },
+  "author": "Laszlo Solova",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "roman-clock": "../pkg"
+  },
+  "devDependencies": {
+    "webpack": "^4.29.3",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.5",
+    "copy-webpack-plugin": "^5.0.0"
+  }
+}

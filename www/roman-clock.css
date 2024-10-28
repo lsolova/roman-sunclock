@@ -1,0 +1,40 @@
+body {
+    width: 100vw;
+    height: 100vh;
+    font-size: 16px;
+    margin: 0;
+}
+
+.RomanClock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.RomanClock__Details {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    border: 1px solid lightgrey;
+    padding: 2rem;
+}
+
+.RomanClock__DayOrNight {
+    width: 2rem;
+    height: 2rem;
+}
+
+.RomanClock__DayOrNight--day {
+    background-image: url("8666699_sun_icon.svg");
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
+
+.RomanClock__DayOrNight--night {
+    background-image: url("9025743_moon_icon.svg");
+    background-repeat: no-repeat;
+    background-size: 100%;
+}
