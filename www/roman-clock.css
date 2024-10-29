@@ -23,7 +23,8 @@ body {
     flex-direction: column;
     gap: 2rem;
     justify-content: center;
-    border: 1px solid var(--second-color);
+    border: .2rem solid var(--second-color);
+    max-width: 80%;
     padding: 4rem;
 }
 
@@ -47,6 +48,9 @@ body {
 
 .RomanClock__MinuteLength {
     color: var(--second-color);
+}
+
+.RomanClock__MinuteLength, .RomanClock__Notification {
     font-size: 4rem;
     text-align: center;
 }
