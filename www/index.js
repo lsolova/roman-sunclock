@@ -60,6 +60,8 @@ getLocation().then((locationDetails) => {
       )} seconds`
     )
   );
+  minuteLengthElement.appendChild(document.createElement("br"));
+  minuteLengthElement.appendChild(document.createTextNode("in a minute"));
 
   const lastSunChange = romanSunTime.last_sun_change.toString();
   const nextSunChange = romanSunTime.next_sun_change.toString();

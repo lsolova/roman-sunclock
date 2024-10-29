@@ -1,7 +1,12 @@
 body {
+    --background-color: white;
+    --main-color: black;
+    --second-color: lightgrey;
+    background-color: var(--background-color);
+    color: var(--main-color);
     width: 100vw;
     height: 100vh;
-    font-size: 16px;
+    font-size: 12rem;
     margin: 0;
 }
 
@@ -16,15 +21,16 @@ body {
     display: flex;
     align-items: center;
     flex-direction: column;
-    gap: 1rem;
+    gap: 2rem;
     justify-content: center;
-    border: 1px solid lightgrey;
-    padding: 2rem;
+    border: 1px solid var(--second-color);
+    padding: 4rem;
 }
 
 .RomanClock__DayOrNight {
-    width: 2rem;
-    height: 2rem;
+    width: 12rem;
+    height: 12rem;
+    margin: 1rem;
 }
 
 .RomanClock__DayOrNight--day {
@@ -37,4 +43,24 @@ body {
     background-image: url("9025743_moon_icon.svg");
     background-repeat: no-repeat;
     background-size: 100%;
+}
+
+.RomanClock__MinuteLength {
+    color: var(--second-color);
+    font-size: 4rem;
+    text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        --background-color: black;
+        --main-color: white;
+        --second-color: #333;
+    }
+    .RomanClock__DayOrNight--day {
+        background-image: url("8666699_sun_icon-white.svg");
+    }
+    .RomanClock__DayOrNight--night {
+        background-image: url("9025743_moon_icon-white.svg");
+    }
 }
