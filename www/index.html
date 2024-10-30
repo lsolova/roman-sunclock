@@ -10,11 +10,19 @@
 <body>
   <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
   <div class="RomanClock">
-    <div id="clockDetails" class="RomanClock__Details">
-      <div class="RomanClock__Notification">Please, allow location services to get your local Roman Sunclock Time.</div>
+    <div class="RomanClock__Container">
+      <div id="clockDetails" class="RomanClock__Details">
+        <div class="RomanClock__Notification">Please, allow location services to get your local Roman Sunclock Time.
+        </div>
+      </div>
+      <div class="RomanClock__Logo">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450" xml:space="preserve">
+          <path d="M 450,450 H 305 C 355,375 350,300 300,225 250,150 245,75 300,0 h 150 z" />
+          <path d="m 0,0 h 150 c -55,75 -50,150 0,225 50,75 55,150 0,225 H 0 Z" />
+        </svg>
+      </div>
     </div>
-  </div>
-  <script src="./bootstrap.js"></script>
+    <script src="./bootstrap.js"></script>
 </body>
 
 </html>
