@@ -20,8 +20,12 @@ jobs:
           submodules: true
           lfs: false
       - run: cargo install wasm-pack
-      - run: wasm-pack build
-      - run: cd www && npm i && npm run build
+      - name: Build WASM library
+        run: wasm-pack build
+      - name: Build web application
+        run: cd www && npm i && npm run build
+        env:
+          GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
       - run: cp www/*.svg dist/
       - name: Build And Deploy
         id: builddeploy

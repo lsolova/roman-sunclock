@@ -47,7 +47,6 @@ body {
     display: flex;
     align-items: center;
     flex-direction: column;
-    gap: 2rem;
     justify-content: center;
     border: .2rem solid var(--second-color);
     padding: 4rem;
@@ -71,16 +70,21 @@ body {
     background-size: 100%;
 }
 
-.RomanClock__LocalTime, .RomanClock__MinuteLength, .RomanClock__Version {
+.RomanClock__LocationDetails, .RomanClock__Version {
     color: var(--second-color);
 }
 
-.RomanClock__LocalTime, .RomanClock__MinuteLength, .RomanClock__Notification {
-    font-size: 4rem;
+.RomanClock__LocationDetails, .RomanClock__Notification {
+    font-size: 3rem;
 }
 
-.RomanClock__LocalTime, .RomanClock__MinuteLength, .RomanClock__Notification, .RomanClock__Version {
+.RomanClock__LocationDetails, .RomanClock__Notification, .RomanClock__Version {
     text-align: center;
+}
+
+.RomanClock__LocationDetails {
+    display: flex;
+    flex-direction: column;
 }
 
 .RomanClock__Version {

@@ -1,12 +1,12 @@
 {
   "name": "roman-clock",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Roman Sun Clock",
   "main": "bootstrap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "vite build",
-    "start": "vite dev"
+    "start": "dotenv -c development -- vite dev"
   },
   "author": "Laszlo Solova",
   "license": "UNLICENSED",
@@ -14,6 +14,8 @@
     "roman-clock": "../pkg"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
+    "dotenv-cli": "^7.4.3",
     "vite": "^5.4.11",
     "vite-plugin-top-level-await": "^1.4.4",
     "vite-plugin-wasm": "^3.3.0"

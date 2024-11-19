@@ -21,11 +21,13 @@ function getLocation() {
       console.log(`Longitude: ${crd.longitude}`);
       console.log(`Elevation: ${crd.altitude}`);
       console.log(`More or less ${crd.accuracy} meters.`);
+
       resolve({
         lat: crd.latitude,
         lon: crd.longitude,
         alt: crd.altitude || 0,
       });
+
     }
 
     function error(err) {
@@ -36,7 +38,7 @@ function getLocation() {
   });
 }
 
-function updateCurrentRomanSunTime(locationDetails) {
+function updateCurrentRomanSunTime(locationDetails, locationName) {
   const nowTime = new Date();
   const romanSunTime = wasm.roman_sun_time(
     BigInt(nowTime.getTime()),
@@ -65,16 +67,23 @@ function updateCurrentRomanSunTime(locationDetails) {
     )
   );
 
-  const localTimeElement = document.createElement("div");
-  localTimeElement.classList.add("RomanClock__LocalTime");
+  const locationDetailsElement = document.createElement("div");
+  locationDetailsElement.classList.add("RomanClock__LocationDetails");
+  const localTimeElement = document.createElement("span");
   localTimeElement.appendChild(
     document.createTextNode(
       `${nowTime.getHours().toString().padStart(2, "0")}:${nowTime.getMinutes().toString().padStart(2, "0")}`
     )
   )
-
-  const minuteLengthElement = document.createElement("div");
-  minuteLengthElement.classList.add("RomanClock__MinuteLength");
+  locationDetailsElement.appendChild(localTimeElement);
+  if (locationName) {
+    const localNameElement = document.createElement("span");
+    localNameElement.appendChild(
+      document.createTextNode(locationName)
+    );
+    locationDetailsElement.appendChild(localNameElement);
+  }
+  const minuteLengthElement = document.createElement("span");
   minuteLengthElement.appendChild(
     document.createTextNode(
       `${new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(
@@ -82,6 +91,7 @@ function updateCurrentRomanSunTime(locationDetails) {
       )} secs/min`
     )
   );
+  locationDetailsElement.appendChild(minuteLengthElement);
 
   const lastSunChange = romanSunTime.last_sun_change.toString();
   const nextSunChange = romanSunTime.next_sun_change.toString();
@@ -95,8 +105,7 @@ function updateCurrentRomanSunTime(locationDetails) {
   }
   clockDetails.appendChild(dayOrNightElement);
   clockDetails.appendChild(nowTimeElement);
-  clockDetails.appendChild(localTimeElement);
-  clockDetails.appendChild(minuteLengthElement);
+  clockDetails.appendChild(locationDetailsElement);
 
   return romanSunTime.minute_length;
 }
@@ -109,11 +118,27 @@ navigator.permissions.query({name:"geolocation"}).then(({state}) => {
   }
 });
 getLocation().then((locationDetails) => {
-  const intervalLength = updateCurrentRomanSunTime(locationDetails);
-  setInterval(
-    () => updateCurrentRomanSunTime(locationDetails),
-    intervalLength * 1000 || 1000
-  );
+  const { lat, lon } = locationDetails;
+  fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&type=city&limit=1&format=json&apiKey=${reverseGeocodeApiKey}`)
+  .then((response) => response.json())
+  .then((result) => {
+    if (Array.isArray(result.results) && result.results.length) {
+      const reverseGeocode = result.results[0];
+      return `${reverseGeocode.city}, ${reverseGeocode.country}`;
+    }
+    return "";
+  })
+  .catch((e) => {
+    console.log("Location could not be resolved", e);
+    return "";
+  })
+  .then((locationName) => {
+    const intervalLength = updateCurrentRomanSunTime(locationDetails, locationName);
+    setInterval(
+      () => updateCurrentRomanSunTime(locationDetails, locationName),
+      intervalLength * 1000 || 1000
+    );
+  });
 }).catch((e) => {
   setNotification("Cannot get your location. This clock cannot work without this information. Please allow it and refresh the page.");
   console.log(e);
