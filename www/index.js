@@ -1,5 +1,10 @@
 import * as wasm from "roman-clock";
 
+function setNotification(notification) {
+  const notificationE = document.querySelector("#clockDetails .RomanClock__Notification");
+  notificationE.innerHTML = notification;
+}
+
 function getLocation() {
   return new Promise((resolve, reject) => {
     const options = {
@@ -32,8 +37,9 @@ function getLocation() {
 }
 
 function updateCurrentRomanSunTime(locationDetails) {
+  const nowTime = new Date();
   const romanSunTime = wasm.roman_sun_time(
-    BigInt(Date.now()),
+    BigInt(nowTime.getTime()),
     locationDetails.lat,
     locationDetails.lon,
     locationDetails.alt
@@ -59,17 +65,23 @@ function updateCurrentRomanSunTime(locationDetails) {
     )
   );
 
+  const localTimeElement = document.createElement("div");
+  localTimeElement.classList.add("RomanClock__LocalTime");
+  localTimeElement.appendChild(
+    document.createTextNode(
+      `${nowTime.getHours().toString().padStart(2, "0")}:${nowTime.getMinutes().toString().padStart(2, "0")}`
+    )
+  )
+
   const minuteLengthElement = document.createElement("div");
   minuteLengthElement.classList.add("RomanClock__MinuteLength");
   minuteLengthElement.appendChild(
     document.createTextNode(
       `${new Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(
         romanSunTime.minute_length
-      )} seconds`
+      )} secs/min`
     )
   );
-  minuteLengthElement.appendChild(document.createElement("br"));
-  minuteLengthElement.appendChild(document.createTextNode("in a minute"));
 
   const lastSunChange = romanSunTime.last_sun_change.toString();
   const nextSunChange = romanSunTime.next_sun_change.toString();
@@ -83,11 +95,19 @@ function updateCurrentRomanSunTime(locationDetails) {
   }
   clockDetails.appendChild(dayOrNightElement);
   clockDetails.appendChild(nowTimeElement);
+  clockDetails.appendChild(localTimeElement);
   clockDetails.appendChild(minuteLengthElement);
 
   return romanSunTime.minute_length;
 }
 
+navigator.permissions.query({name:"geolocation"}).then(({state}) => {
+  if (state === "granted") {
+    setNotification("Requesting your location. Please, wait.");
+  } else {
+    setNotification("Please, allow location services to get your local Roman Sunclock Time.");
+  }
+});
 getLocation().then((locationDetails) => {
   const intervalLength = updateCurrentRomanSunTime(locationDetails);
   setInterval(
@@ -95,8 +115,6 @@ getLocation().then((locationDetails) => {
     intervalLength * 1000 || 1000
   );
 }).catch((e) => {
-  const notification = document.querySelector("#clockDetails .RomanClock__Notification");
-  notification.innerHTML = "Cannot get your location. This clock cannot work without this information. Please allow it and refresh the page.";
-
+  setNotification("Cannot get your location. This clock cannot work without this information. Please allow it and refresh the page.");
   console.log(e);
 });

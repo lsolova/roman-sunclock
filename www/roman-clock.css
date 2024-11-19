@@ -6,6 +6,8 @@ body {
     --background-color: white;
     --main-color: black;
     --second-color: lightgrey;
+    display: flex;
+    flex-direction: column;
     background-color: var(--background-color);
     color: var(--main-color);
     width: 100vw;
@@ -69,13 +71,20 @@ body {
     background-size: 100%;
 }
 
-.RomanClock__MinuteLength {
+.RomanClock__LocalTime, .RomanClock__MinuteLength, .RomanClock__Version {
     color: var(--second-color);
 }
 
-.RomanClock__MinuteLength, .RomanClock__Notification {
+.RomanClock__LocalTime, .RomanClock__MinuteLength, .RomanClock__Notification {
     font-size: 4rem;
+}
+
+.RomanClock__LocalTime, .RomanClock__MinuteLength, .RomanClock__Notification, .RomanClock__Version {
     text-align: center;
+}
+
+.RomanClock__Version {
+    font-size: 2rem;
 }
 
 @media (prefers-color-scheme: dark) {
