@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { VitePWA } from "vite-plugin-pwa";
 import config from "./package.json";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -19,5 +20,22 @@ export default defineConfig({
   build: {
     outDir: "../dist",
   },
-  plugins: [htmlPlugin(config.version), wasm(), topLevelAwait()],
+  plugins: [
+    htmlPlugin(config.version),
+    VitePWA({
+      devOptions: {
+        enabled: true,
+      },
+      manifest: {
+        name: "Roman Sunclock Time",
+        short_name: "Sunclock",
+        description: "Displays time following the roman sunclock time calculations (12 hours daytime, 12 hours nighttime).",
+        id: "com.solova.rsct",
+        theme_color: "#FFFFFF",
+      },
+      registerType: "autoUpdate",
+    }),
+    wasm(),
+    topLevelAwait(),
+  ],
 });

@@ -62,12 +62,6 @@ function getLocation() {
     function success(pos) {
       const crd = pos.coords;
 
-      console.log("Your current position is:");
-      console.log(`Latitude : ${crd.latitude}`);
-      console.log(`Longitude: ${crd.longitude}`);
-      console.log(`Elevation: ${crd.altitude}`);
-      console.log(`More or less ${crd.accuracy} meters.`);
-
       const locationDetails = {
         lat: crd.latitude,
         lon: crd.longitude,
@@ -171,12 +165,6 @@ function updateCurrentRomanSunTime(locationDetails, locationName) {
     )
   );
   locationDetailsElement.appendChild(minuteLengthElement);
-
-  const lastSunChange = romanSunTime.last_sun_change.toString();
-  const nextSunChange = romanSunTime.next_sun_change.toString();
-  console.log(lastSunChange, new Date(Number(lastSunChange)));
-  console.log(nextSunChange, new Date(Number(nextSunChange)));
-  console.log(romanSunTime.hours, romanSunTime.minutes);
 
   let firstChild = null;
   while ((firstChild = clockDetails.firstChild) !== null) {
