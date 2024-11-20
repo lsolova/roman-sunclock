@@ -205,4 +205,22 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn test_evening_bug_of_displayed_hour_24() {
+        // Wed, 20 Nov 2024 00:25:00 GMT+0100
+        assert_eq!(
+            calculate_roman_sun_time(1732058700000, 36.6952287, -4.4538448, 0.0),
+            RomanTimeDetails {
+                hours: 23,
+                minutes: 26,
+                last_sun_change: 1732035998446, // Tue, 19 Nov 2024 18:06:38 GMT+01:00
+                next_sun_change: 1732086075901, // Wed, 20 Nov 2024 08:01:15 GMT+01:00
+                total_minutes: 1406,
+                minute_length: 69.552,
+                is_day: false,
+                is_morning: false
+            }
+        );
+    }
 }
