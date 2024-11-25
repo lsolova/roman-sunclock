@@ -1,5 +1,5 @@
 [package]
-name = "roman-clock"
+name = "roman-sunclock"
 description = "Roman Sunclock Time - special timezone based on local daylight"
 repository = "https://github.com/lsolova/roman-sun-clock"
 version = "0.1.1"

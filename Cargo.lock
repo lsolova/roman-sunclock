@@ -162,7 +162,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "roman-clock"
+name = "roman-sunclock"
 version = "0.1.1"
 dependencies = [
  "chrono",

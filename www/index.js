@@ -1,4 +1,4 @@
-import * as wasm from "roman-clock";
+import * as wasm from "roman-sunclock";
 
 function saveLocationDetails(locationDetails) {
   window.localStorage.setItem("rsctLocationDetails", JSON.stringify({
@@ -46,7 +46,7 @@ function loadLocationName(lat, lon) {
 
 function setNotification(notification) {
   const notificationE = document.querySelector(
-    "#clockDetails .RomanClock__Notification"
+    "#clockDetails .RomanSunclock__Notification"
   );
   notificationE.innerHTML = notification;
 }
@@ -124,13 +124,13 @@ function updateCurrentRomanSunTime(locationDetails, locationName) {
   const clockDetails = document.getElementById("clockDetails");
 
   const dayOrNightElement = document.createElement("div");
-  dayOrNightElement.classList.add("RomanClock__DayOrNight");
+  dayOrNightElement.classList.add("RomanSunclock__DayOrNight");
   dayOrNightElement.classList.add(
-    `RomanClock__DayOrNight--${romanSunTime.is_day ? "day" : "night"}`
+    `RomanSunclock__DayOrNight--${romanSunTime.is_day ? "day" : "night"}`
   );
 
   const nowTimeElement = document.createElement("div");
-  nowTimeElement.classList.add("RomanClock__Time");
+  nowTimeElement.classList.add("RomanSunclock__Time");
   nowTimeElement.appendChild(
     document.createTextNode(
       `${Math.floor(romanSunTime.hours)
@@ -140,7 +140,7 @@ function updateCurrentRomanSunTime(locationDetails, locationName) {
   );
 
   const locationDetailsElement = document.createElement("div");
-  locationDetailsElement.classList.add("RomanClock__LocationDetails");
+  locationDetailsElement.classList.add("RomanSunclock__LocationDetails");
   const localTimeElement = document.createElement("span");
   localTimeElement.appendChild(
     document.createTextNode(

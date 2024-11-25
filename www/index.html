@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <title>Roman Sunclock Time</title>
-  <link rel="stylesheet" href="./roman-clock.css" />
+  <link rel="stylesheet" href="./roman-sunclock.css" />
   <script>
     const reverseGeocodeApiKey = "%GEOCODE_API_KEY%";
   </script>
@@ -12,12 +12,12 @@
 
 <body>
   <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
-  <div class="RomanClock">
-    <div class="RomanClock__Container">
-      <div id="clockDetails" class="RomanClock__Details">
-        <div class="RomanClock__Notification"></div>
+  <div class="RomanSunclock">
+    <div class="RomanSunclock__Container">
+      <div id="clockDetails" class="RomanSunclock__Details">
+        <div class="RomanSunclock__Notification"></div>
       </div>
-      <div class="RomanClock__Logo">
+      <div class="RomanSunclock__Logo">
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450" xml:space="preserve">
           <path d="M 450,450 H 305 C 355,375 350,300 300,225 250,150 245,75 300,0 h 150 z" />
           <path d="m 0,0 h 150 c -55,75 -50,150 0,225 50,75 55,150 0,225 H 0 Z" />
@@ -25,7 +25,7 @@
       </div>
     </div>
   </div>
-  <div class="RomanClock__Version">v%APP_VERSION%.%COMMIT_SHA%</div>
+  <div class="RomanSunclock__Version">v%APP_VERSION%.<a href="https://github.com/lsolova/roman-sunclock">%COMMIT_SHA%</a></div>
   <script src="./bootstrap.js" type="module"></script>
 </body>
 

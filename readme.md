@@ -1,13 +1,24 @@
-# Roman Sun Clock
+# Roman Sunclock
 
-This is an experiment to write WASM (WebAssembly) module using _Rust_. Idea came from [this BBC article](https://www.bbc.com/future/article/20240328-the-ancient-roman-alternative-to-daylight-savings-time).
+Roman Sunclock Time is a local time based on the sun movement. Daytime and nighttime are splitted into 12 hours. Idea came from [this BBC article][1].
 
-Roman Sun Clock calculates sunset and sunrise of yesterday, today and tomorrow. Based on the current timestamp it calculates minute length for 12 hours between sun changes (set and rise) and current time in _Roman Sun Time_. A minute is longer than 60 seconds in summer time and shorter in winter time depending on the sun movement.
+Roman Sunclock calculates sunset and sunrise before and after current timestamp. Then it calculates minute length for 12 hours between sun changes (set and rise) and current time in _Roman Sunclock Time_. It differs from original [Roman timekeeping][2], because this provides always 60 minutes and minute length varies (less or more seconds). A minute could be more than 60 seconds in summer time and shorter in winter time depending on the sun movement.
+
+This is an experiment
+
+- to write _WASM (WebAssembly)_ module using _Rust_
+- set up _PWA_ for offline usage
+- _data caching_ to support places without GPS (it is required for first use)
 
 ## Resources
 
+- [BBC article][1]
 - [Icons from iconfinder](https://www.iconfinder.com)
 - [MDN: Geolocation coordinates](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates)
 - [Rust WASM book](https://rustwasm.github.io/docs/book/)
 - [Wikipedia: Julian day](https://en.wikipedia.org/wiki/Julian_day)
 - [Wikipedia: Sunrise equation](https://en.wikipedia.org/wiki/Sunrise_equation)
+- [Wikipedia: Roman timekeeping][2]
+
+[1]: https://www.bbc.com/future/article/20240328-the-ancient-roman-alternative-to-daylight-savings-time
+[2]: https://en.m.wikipedia.org/wiki/Roman_timekeeping
