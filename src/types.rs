@@ -23,9 +23,13 @@ pub enum PartialOrFullDayNight {
 pub struct RomanTimeDetails {
     pub hours: i32,
     pub minutes: i32,
+    pub today_start: i64,
+    pub today_sunrise: i64,
+    pub today_sunset: i64,
+    pub today_end: i64,
     pub last_sun_change: i64,
     pub next_sun_change: i64,
-    pub total_minutes: i32,
+    pub total_minutes: i32, // Just for debugging
     pub minute_length: f32,
     pub is_day: bool,
     pub is_morning: bool,

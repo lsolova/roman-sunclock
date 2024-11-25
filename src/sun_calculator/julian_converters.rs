@@ -7,7 +7,12 @@ pub fn julian_date_to_unix_milliseconds(juldate: f64) -> i64 {
 }
 
 pub fn unix_milliseconds_to_julian_date(millisecs: i64) -> f64 {
-    millisecs as f64 / DAY_MILLISECONDS + JULIAN_DATE_DIFFERENCE
+    /* This fixes an issue with calculation of milliseconds on day ends
+     * If a timestamp is 1654905599999 then it will be converted to the next day,
+     * because of some rounding during the process. Therefore we are rounding up
+     * to seconds, this will prevent jumping to the next day. */
+    let cleaned_to_seconds = ((millisecs as f64 / 1000.0).floor()) * 1000.0;
+    cleaned_to_seconds / DAY_MILLISECONDS + JULIAN_DATE_DIFFERENCE
 }
 
 #[cfg(test)]
@@ -32,6 +37,7 @@ mod tests {
         assert_eq!(unix_milliseconds_to_julian_date(0), 2440587.5);
         assert_eq!(unix_milliseconds_to_julian_date(43200000), 2440588.0);
         assert_eq!(unix_milliseconds_to_julian_date(86400000), 2440588.5);
+        assert_eq!(unix_milliseconds_to_julian_date(1654905599999), 2459741.499988426);
     }
 
     #[test]
