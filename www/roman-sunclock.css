@@ -9,10 +9,10 @@ body {
     display: flex;
     flex-direction: column;
     background-color: var(--background-color);
-    color: var(--main-color);
+    color: var(--second-color);
     width: 100vw;
     height: 100vh;
-    font-size: 12rem;
+    font-size: 3rem;
     margin: 0;
     user-select: none;
 }
@@ -23,15 +23,45 @@ body {
     justify-content: center;
     height: 100%;
     overflow: hidden;
+    perspective: 100rem;
+    transform-style: preserve-3d;
+}
+
+.RomanSunclock__Container--front {
+    transform: rotateY(0);
+}
+
+.RomanSunclock__Container--back {
+    transform: rotateY(180deg);
+}
+
+.RomanSunclock--flipped .RomanSunclock__Container--front {
+    transform: rotateY(-180deg);
+}
+
+.RomanSunclock--flipped .RomanSunclock__Container--back {
+    transform: rotateY(0);
 }
 
 .RomanSunclock__Container {
     text-align: center;
-    max-width: 80%;
+    backface-visibility: hidden;
+    border: .2rem solid var(--second-color);
+    padding: 4rem;
+    min-height: 48rem;
+    width: min(80vw, 34rem);
+    position: absolute;
+    transition: transform 1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .RomanSunclock__Logo {
     height: 1.5rem;
+    position: absolute;
+    bottom: -9.75rem;
+    width: calc(100% - 8rem);
 }
 
 .RomanSunclock__Logo svg {
@@ -49,8 +79,14 @@ body {
     align-items: center;
     flex-direction: column;
     justify-content: center;
-    border: .2rem solid var(--second-color);
-    padding: 4rem;
+}
+
+:not(.RomanSunclock--loading) .RomanSunclock__LoadingDetails {
+    display: none;
+}
+
+.RomanSunclock--loading .RomanSunclock__Details {
+    display: none;
 }
 
 .RomanSunclock__DayOrNight {
@@ -71,16 +107,13 @@ body {
     background-size: 100%;
 }
 
-.RomanSunclock__LocationDetails, .RomanSunclock__Version {
-    color: var(--second-color);
+.RomanSunclock__Time {
+    color: var(--main-color);
+    font-size: 12rem;
 }
 
-.RomanSunclock__LocationDetails, .RomanSunclock__Notification {
-    font-size: 3rem;
-}
-
-.RomanSunclock__LocationDetails, .RomanSunclock__Notification, .RomanSunclock__Version {
-    text-align: center;
+.RomanSunclock__Canvas {
+    margin: 2rem 0 1rem 0;
 }
 
 .RomanSunclock__LocationDetails {
@@ -90,7 +123,9 @@ body {
 
 .RomanSunclock__Version {
     font-size: 2rem;
+    text-align: center;
 }
+
 .RomanSunclock__Version a {
     text-decoration: none;
     color: inherit;
@@ -102,9 +137,11 @@ body {
         --main-color: white;
         --second-color: #333;
     }
+
     .RomanSunclock__DayOrNight--day {
         background-image: url("8666699_sun_icon-white.svg");
     }
+
     .RomanSunclock__DayOrNight--night {
         background-image: url("9025743_moon_icon-white.svg");
     }

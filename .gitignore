@@ -2,4 +2,5 @@
 /pkg
 /target
 /www/.env*
+/www/dev-dist
 /www/node_modules
