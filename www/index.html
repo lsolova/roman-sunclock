@@ -12,10 +12,30 @@
 
 <body>
   <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
-  <div class="RomanSunclock">
-    <div class="RomanSunclock__Container">
-      <div id="clockDetails" class="RomanSunclock__Details">
+  <div id="scRoot" class="RomanSunclock RomanSunclock--loading">
+    <div class="RomanSunclock__Container RomanSunclock__Container--front">
+      <div class="RomanSunclock__LoadingDetails">
         <div class="RomanSunclock__Notification"></div>
+      </div>
+      <div class="RomanSunclock__Details">
+        <div id="dayNightIcon" class="RomanSunclock__DayOrNight"></div>
+        <div id="scTime" class="RomanSunclock__Time"></div>
+        <div id="scDetails" class="RomanSunclock__LocationDetails"></div>
+      </div>
+      <div class="RomanSunclock__Logo">
+        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450" xml:space="preserve">
+          <path d="M 450,450 H 305 C 355,375 350,300 300,225 250,150 245,75 300,0 h 150 z" />
+          <path d="m 0,0 h 150 c -55,75 -50,150 0,225 50,75 55,150 0,225 H 0 Z" />
+        </svg>
+      </div>
+    </div>
+    <div class="RomanSunclock__Container RomanSunclock__Container--back">
+      <div class="RomanSunclock__Data">
+        <div class="RomanSunclock__Details">
+          <span>Roman Sunclock Time</span>
+        </div>
+        <canvas id="dayNightInfoCanvas" class="RomanSunclock__Canvas" width="250" height="250"></canvas>
+        <div id="scCalcDetails" class="RomanSunclock__Details"></div>
       </div>
       <div class="RomanSunclock__Logo">
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450" xml:space="preserve">

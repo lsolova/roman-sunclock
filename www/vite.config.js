@@ -34,6 +34,9 @@ export default defineConfig({
         theme_color: "#FFFFFF",
       },
       registerType: "autoUpdate",
+      workbox: {
+        globPatterns: ["**/*.css,html,js,svg,wasm"]
+      }
     }),
     wasm(),
     topLevelAwait(),
