@@ -5,11 +5,13 @@ html {
 body {
     --background-color: white;
     --main-color: black;
-    --second-color: lightgrey;
+    --secondary-color: lightgrey;
+    --day-color: white;
+    --night-color: grey;
     display: flex;
     flex-direction: column;
     background-color: var(--background-color);
-    color: var(--second-color);
+    color: var(--secondary-color);
     width: 100vw;
     height: 100vh;
     font-size: 3rem;
@@ -25,6 +27,45 @@ body {
     overflow: hidden;
     perspective: 100rem;
     transform-style: preserve-3d;
+}
+
+.RomanSunclock__Clock {
+    margin: 3rem 0 2rem 0;
+    position: relative;
+}
+
+.RomanSunclock__Clock__Image {
+    height: 30rem;
+    width: 30rem;
+}
+
+.RomanSunclock__Clock__Image svg {
+    height: 30rem;
+    width: 30rem;
+}
+
+
+.RomanSunclock__Clock__Hours {
+    position: absolute;
+    height: 30rem;
+    width: 30rem;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.RomanSunclock__Clock__Hours span {
+    display: block;
+}
+
+.RomanSunclock__Clock__RomanTime {
+    color: var(--main-color);
+}
+
+.RomanSunclock__Clock__LocalTime {
+    color: var(--secondary-color);
 }
 
 .RomanSunclock__Container--front {
@@ -46,7 +87,7 @@ body {
 .RomanSunclock__Container {
     text-align: center;
     backface-visibility: hidden;
-    border: .2rem solid var(--second-color);
+    border: .2rem solid var(--secondary-color);
     padding: 4rem;
     min-height: 48rem;
     width: min(80vw, 34rem);
@@ -70,7 +111,7 @@ body {
     width: 3rem;
     bottom: 9.5rem;
     background: var(--background-color);
-    fill: var(--second-color);
+    fill: var(--secondary-color);
     padding: 0 1rem;
 }
 
@@ -112,10 +153,6 @@ body {
     font-size: 12rem;
 }
 
-.RomanSunclock__Canvas {
-    margin: 2rem 0 1rem 0;
-}
-
 .RomanSunclock__LocationDetails {
     display: flex;
     flex-direction: column;
@@ -135,7 +172,8 @@ body {
     body {
         --background-color: black;
         --main-color: white;
-        --second-color: #333;
+        --secondary-color: #333;
+        --night-color: #333;
     }
 
     .RomanSunclock__DayOrNight--day {

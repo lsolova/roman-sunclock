@@ -1,8 +1,5 @@
 import * as wasm from "roman-sunclock";
 
-const CANVAS_X_CENTER = 125;
-const CANVAS_Y_CENTER = 125;
-
 function asNumber(bigint) {
   return Number(bigint.toString());
 }
@@ -11,6 +8,100 @@ function formatClockTime(hours, minutes) {
   return `${hours.toString().padStart(2, "0")}:${minutes
     .toString()
     .padStart(2, "0")}`;
+}
+
+function generateSvg(
+  nowTime,
+  todayStartEpoch,
+  todaySunriseEpoch,
+  todaySunsetEpoch
+) {
+  const CANVAS_X_CENTER = 125;
+  const CANVAS_Y_CENTER = 125;
+  const DAYLENGTH = 86400000;
+  const FULL_CIRCLE = Math.PI * 2;
+  const NINETY_DEGREE_IN_RAD = Math.PI / 2;
+
+  function calculatePoint(w, radius) {
+    return [
+      Math.cos(w - NINETY_DEGREE_IN_RAD) * radius + CANVAS_X_CENTER,
+      Math.sin(w - NINETY_DEGREE_IN_RAD) * radius + CANVAS_Y_CENTER,
+    ];
+  }
+
+  function drawRomanHourLines(initialW, step) {
+    const content = [];
+    for (let i = 1; i < 12; i++) {
+      const w = initialW + i * step;
+      const length = i % 3 === 0 ? 107 : 113;
+      const [x1, y1] = calculatePoint(w, 119);
+      const [x2, y2] = calculatePoint(w, length);
+      content.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`);
+    }
+    return content;
+  }
+
+  const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000;
+  const nowDiff = nowTime - todayStartEpoch - timezoneOffset;
+  const nowW = (nowDiff / DAYLENGTH) * FULL_CIRCLE;
+  const sunriseEpochDiff = todaySunriseEpoch - todayStartEpoch - timezoneOffset;
+  const sunriseW = (sunriseEpochDiff / DAYLENGTH) * FULL_CIRCLE;
+  const sunsetEpochDiff = todaySunsetEpoch - todayStartEpoch - timezoneOffset;
+  const sunsetW = (sunsetEpochDiff / DAYLENGTH) * FULL_CIRCLE;
+
+  const [nowPointX, nowPointY] = calculatePoint(nowW, 102);
+  const [sunriseX, sunriseY] = calculatePoint(sunriseW, 105);
+  const [sunsetX, sunsetY] = calculatePoint(sunsetW, 105);
+
+  const isDayLonger = Math.PI < sunsetW - sunriseW;
+
+  const svgContent = [];
+  svgContent.push('<svg viewBox="0 0 250 250" fill="transparent">');
+  svgContent.push(
+    `<path d="M ${sunsetX} ${sunsetY} A 105 105 0 ${
+      isDayLonger ? "0 1" : "1 1"
+    } ${sunriseX} ${sunriseY}" stroke="var(--night-color)" stroke-width="30" />`
+  );
+  svgContent.push(
+    `<path d="M ${sunriseX} ${sunriseY} A 105 105 0 ${
+      isDayLonger ? "1 1" : "0 1"
+    } ${sunsetX} ${sunsetY}" stroke="var(--day-color)" stroke-width="30" />`
+  );
+  svgContent.push('<g stroke="var(--main-color)">');
+  svgContent.push(
+    `<circle cx=\"${CANVAS_X_CENTER}\" cy=\"${CANVAS_Y_CENTER}\" r=\"90\" />`
+  );
+  svgContent.push(
+    `<circle cx=\"${CANVAS_X_CENTER}\" cy=\"${CANVAS_Y_CENTER}\" r=\"120\" />`
+  );
+  for (let i = 0; i < 24; i++) {
+    const w = (i * Math.PI) / 12;
+    const length = i % 3 === 0 ? 80 : 85;
+    const [x1, y1] = calculatePoint(w, 91);
+    const [x2, y2] = calculatePoint(w, length);
+    svgContent.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`);
+  }
+  svgContent.push('<g stroke="var(--night-color)">');
+  svgContent.push(...drawRomanHourLines(sunriseW, (sunsetW - sunriseW) / 12));
+  svgContent.push("</g>");
+  svgContent.push('<g stroke="var(--day-color)">');
+  svgContent.push(
+    ...drawRomanHourLines(sunsetW, (FULL_CIRCLE - (sunsetW - sunriseW)) / 12)
+  );
+  svgContent.push("</g>");
+  svgContent.push("</g>");
+  svgContent.push(
+    `<circle cx=\"${nowPointX}\" cy=\"${nowPointY}\" r=\"4\" fill=\"red\" />`
+  );
+  // svgContent.push(
+  //   `<circle cx=\"${sunsetX}\" cy=\"${sunsetY}\" r=\"4\" fill=\"purple\" />`
+  // );
+  // svgContent.push(
+  //   `<circle cx=\"${sunriseX}\" cy=\"${sunriseY}\" r=\"4\" fill=\"orange\" />`
+  // );
+
+  svgContent.push("</svg>");
+  return svgContent.join("");
 }
 
 function saveLocationDetails(locationDetails) {
@@ -180,106 +271,19 @@ function updateCurrentRomanSunTime(locationDetails, locationName) {
   const calculationDetailsElement = document.getElementById("scCalcDetails");
   calculationDetailsElement.innerHTML = `<span>sunrise: ${todaySunriseTime}</span><span>sunset: ${todaySunsetTime}</span>`;
 
-  const dataCanvasElement = document.getElementById("dayNightInfoCanvas");
-  if (dataCanvasElement.getContext) {
-    const mainColor = window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "white"
-      : "#333";
-    const ctx = dataCanvasElement.getContext("2d");
-    ctx.reset();
-    const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000;
-    const sunriseEpochDiff =
-      todaySunriseEpoch - todayStartEpoch - timezoneOffset;
-    const sunsetEpochDiff = todaySunsetEpoch - todayStartEpoch - timezoneOffset;
-    const nowDiff = nowTime - todayStartEpoch - timezoneOffset;
-    const sunriseW = (sunriseEpochDiff / 86400000) * Math.PI * 2 - Math.PI / 2;
-    const sunsetW = (sunsetEpochDiff / 86400000) * Math.PI * 2 - Math.PI / 2;
-    const nowW = (nowDiff / 86400000) * Math.PI * 2 - Math.PI / 2;
+  const dayClockElement = document.getElementById("dayClockImage");
+  dayClockElement.innerHTML = generateSvg(
+    nowTime,
+    todayStartEpoch,
+    todaySunriseEpoch,
+    todaySunsetEpoch
+  );
 
-    ctx.strokeStyle = "#333";
-    ctx.lineWidth = 30;
-    ctx.beginPath();
-    ctx.arc(CANVAS_X_CENTER, CANVAS_Y_CENTER, 105, -(Math.PI / 2), sunriseW);
-    ctx.stroke();
-    ctx.strokeStyle = "white";
-    ctx.beginPath();
-    ctx.arc(CANVAS_X_CENTER, CANVAS_Y_CENTER, 105, sunriseW, sunsetW);
-    ctx.stroke();
-    ctx.strokeStyle = "#333";
-    ctx.beginPath();
-    ctx.arc(CANVAS_X_CENTER, CANVAS_Y_CENTER, 105, sunsetW, Math.PI * 1.5);
-    ctx.stroke();
-
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 1;
-
-    const step = (Math.PI * 2 - (sunsetW - sunriseW)) / 12;
-    for (let i = 1; i < 12; i++) {
-      const w = sunsetW + i * step;
-      const length = i % 3 === 0 ? 107 : 113;
-      const x1 = length * Math.cos(w) + CANVAS_X_CENTER;
-      const y1 = length * Math.sin(w) + CANVAS_Y_CENTER;
-      const x2 = 120 * Math.cos(w) + CANVAS_X_CENTER;
-      const y2 = 120 * Math.sin(w) + CANVAS_Y_CENTER;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = "#333";
-    const step2 = (sunsetW - sunriseW) / 12;
-    for (let i = 1; i < 12; i++) {
-      const w = sunriseW + i * step2;
-      const length = i % 3 === 0 ? 107 : 113;
-      const x1 = length * Math.cos(w) + CANVAS_X_CENTER;
-      const y1 = length * Math.sin(w) + CANVAS_Y_CENTER;
-      const x2 = 120 * Math.cos(w) + CANVAS_X_CENTER;
-      const y2 = 120 * Math.sin(w) + CANVAS_Y_CENTER;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-
-    ctx.strokeStyle = mainColor;
-    ctx.beginPath();
-    ctx.arc(CANVAS_X_CENTER, CANVAS_Y_CENTER, 90, 0, Math.PI * 2, false);
-    ctx.stroke();
-    ctx.closePath();
-    ctx.beginPath();
-    ctx.arc(CANVAS_X_CENTER, CANVAS_Y_CENTER, 120, 0, Math.PI * 2, false);
-    ctx.stroke();
-    ctx.closePath();
-    for (let i = 0; i < 24; i++) {
-      const w = (i * Math.PI) / 12;
-      const x1 = 90 * Math.sin(w) + CANVAS_X_CENTER;
-      const y1 = 90 * Math.cos(w) + CANVAS_Y_CENTER;
-      ctx.moveTo(x1, y1);
-      const length = i % 3 === 0 ? 80 : 85;
-      const x2 = length * Math.sin(w) + CANVAS_X_CENTER;
-      const y2 = length * Math.cos(w) + CANVAS_Y_CENTER;
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-
-    ctx.fillStyle = mainColor;
-    ctx.textAlign = "center";
-    ctx.font = "32px serif";
-    ctx.fillText(romanSunclockTime, CANVAS_X_CENTER, 120);
-    ctx.fillStyle = "#333";
-    ctx.fillText(formatClockTime(
-      nowTime.getHours(),
-      nowTime.getMinutes()
-    ), CANVAS_X_CENTER, 152);
-
-    ctx.fillStyle = "red";
-    const arcX = 102 * Math.cos(nowW) + CANVAS_X_CENTER;
-    const arcY = 102 * Math.sin(nowW) + CANVAS_Y_CENTER;
-    ctx.beginPath();
-    ctx.arc(arcX, arcY, 4, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  const dayClockHoursElement = document.getElementById("dayClockHours");
+  dayClockHoursElement.innerHTML = `<span class="RomanSunclock__Clock__RomanTime">${romanSunclockTime}</span><span class="RomanSunclock__Clock__LocalTime">${formatClockTime(
+    nowTime.getHours(),
+    nowTime.getMinutes()
+  )}</span>`;
 
   const faceList = document.getElementsByClassName("RomanSunclock");
   for (let i = 0; i < faceList.length; i++) {

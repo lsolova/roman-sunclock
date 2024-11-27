@@ -34,7 +34,10 @@
         <div class="RomanSunclock__Details">
           <span>Roman Sunclock Time</span>
         </div>
-        <canvas id="dayNightInfoCanvas" class="RomanSunclock__Canvas" width="250" height="250"></canvas>
+        <div class="RomanSunclock__Clock">
+          <div id="dayClockImage" class="RomanSunclock__Clock__Image"></div>
+          <div id="dayClockHours" class="RomanSunclock__Clock__Hours"></div>
+        </div>
         <div id="scCalcDetails" class="RomanSunclock__Details"></div>
       </div>
       <div class="RomanSunclock__Logo">
@@ -45,7 +48,8 @@
       </div>
     </div>
   </div>
-  <div class="RomanSunclock__Version">v%APP_VERSION%.<a href="https://github.com/lsolova/roman-sunclock">%COMMIT_SHA%</a></div>
+  <div class="RomanSunclock__Version">v%APP_VERSION%.<a
+      href="https://github.com/lsolova/roman-sunclock">%COMMIT_SHA%</a></div>
   <script src="./bootstrap.js" type="module"></script>
 </body>
 
