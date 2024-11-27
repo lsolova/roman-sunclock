@@ -9,7 +9,7 @@ This is an experiment
 - to write _WASM (WebAssembly)_ module using _Rust_
 - set up _PWA_ for offline usage
 - _data caching_ to support places without GPS (it is required for first use)
-- drawing on _canvas_
+- drawing on ~~_canvas_~~ _svg_ (adapted to mobile)
 
 ## Resources
 
