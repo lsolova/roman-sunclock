@@ -29,9 +29,60 @@ body {
     transform-style: preserve-3d;
 }
 
+.RomanSunclock__Container {
+    text-align: center;
+    backface-visibility: hidden;
+    border: .2rem solid var(--secondary-color);
+    padding: 4rem;
+    height: 48rem;
+    width: min(80vw, 34rem);
+    position: absolute;
+    transition: transform 1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.RomanSunclock__Container--front {
+    transform: rotateY(0);
+}
+
+.RomanSunclock__Container--back {
+    transform: rotateY(180deg);
+}
+
+.RomanSunclock--flipped .RomanSunclock__Container--front {
+    transform: rotateY(-180deg);
+}
+
+.RomanSunclock--flipped .RomanSunclock__Container--back {
+    transform: rotateY(0);
+}
+
+.RomanSunclock--loading .RomanSunclock__LoadingDetails {
+    display: block;
+}
+
+.RomanSunclock__LoadingDetails {
+    display: none;
+}
+
+.RomanSunclock__Details {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.RomanSunclock--loading .RomanSunclock__Details {
+    display: none;
+}
+
 .RomanSunclock__Clock {
     margin: 3rem 0 2rem 0;
     position: relative;
+    display: flex;
+    justify-content: center;
 }
 
 .RomanSunclock__Clock__Image {
@@ -56,46 +107,45 @@ body {
     align-items: center;
 }
 
-.RomanSunclock__Clock__Hours span {
-    display: block;
+.RomanSunclock__Clock__RomanTime,
+.RomanSunclock__Description {
+    color: var(--main-color);
 }
 
-.RomanSunclock__Clock__RomanTime {
-    color: var(--main-color);
+.RomanSunclock__Description p {
+    font-size: 2.7rem;
+    margin: 0 0 3rem 0;
 }
 
 .RomanSunclock__Clock__LocalTime {
     color: var(--secondary-color);
 }
 
-.RomanSunclock__Container--front {
-    transform: rotateY(0);
+.RomanSunclock__DayOrNight {
+    width: 6rem;
+    height: 6rem;
+    margin: 1rem;
+    background-repeat: no-repeat;
+    background-size: 100%;
 }
 
-.RomanSunclock__Container--back {
-    transform: rotateY(180deg);
+.RomanSunclock__DayOrNight--day {
+    background-image: url("8666699_sun_icon.svg");
 }
 
-.RomanSunclock--flipped .RomanSunclock__Container--front {
-    transform: rotateY(-180deg);
+.RomanSunclock__DayOrNight--night {
+    background-image: url("9025743_moon_icon.svg");
 }
 
-.RomanSunclock--flipped .RomanSunclock__Container--back {
-    transform: rotateY(0);
-}
-
-.RomanSunclock__Container {
+.RomanSunclock__Version {
+    color: var(--secondary-color);
+    font-size: 2rem;
     text-align: center;
-    backface-visibility: hidden;
-    border: .2rem solid var(--secondary-color);
-    padding: 4rem;
-    min-height: 48rem;
-    width: min(80vw, 34rem);
-    position: absolute;
-    transition: transform 1s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+}
+
+.RomanSunclock__Version a {
+    text-decoration: none;
+    color: inherit;
 }
 
 .RomanSunclock__Logo {
@@ -115,65 +165,12 @@ body {
     padding: 0 1rem;
 }
 
-.RomanSunclock__Details {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
-}
-
-:not(.RomanSunclock--loading) .RomanSunclock__LoadingDetails {
-    display: none;
-}
-
-.RomanSunclock--loading .RomanSunclock__Details {
-    display: none;
-}
-
-.RomanSunclock__DayOrNight {
-    width: 12rem;
-    height: 12rem;
-    margin: 1rem;
-}
-
-.RomanSunclock__DayOrNight--day {
-    background-image: url("8666699_sun_icon.svg");
-    background-repeat: no-repeat;
-    background-size: 100%;
-}
-
-.RomanSunclock__DayOrNight--night {
-    background-image: url("9025743_moon_icon.svg");
-    background-repeat: no-repeat;
-    background-size: 100%;
-}
-
-.RomanSunclock__Time {
-    color: var(--main-color);
-    font-size: 12rem;
-}
-
-.RomanSunclock__LocationDetails {
-    display: flex;
-    flex-direction: column;
-}
-
-.RomanSunclock__Version {
-    font-size: 2rem;
-    text-align: center;
-}
-
-.RomanSunclock__Version a {
-    text-decoration: none;
-    color: inherit;
-}
-
 @media (prefers-color-scheme: dark) {
     body {
         --background-color: black;
         --main-color: white;
-        --secondary-color: #333;
-        --night-color: #333;
+        --secondary-color: grey;
+        --night-color: grey;
     }
 
     .RomanSunclock__DayOrNight--day {

@@ -99,7 +99,6 @@ function generateSvg(
   // svgContent.push(
   //   `<circle cx=\"${sunriseX}\" cy=\"${sunriseY}\" r=\"4\" fill=\"orange\" />`
   // );
-
   svgContent.push("</svg>");
   return svgContent.join("");
 }
@@ -223,97 +222,102 @@ function getLocationName(lat, lon) {
 }
 
 function updateCurrentRomanSunTime(locationDetails, locationName) {
-  const nowTime = new Date();
-  const romanSunTime = wasm.roman_sun_time(
-    BigInt(nowTime.getTime()),
+  const nowDate = new Date();
+
+  const romanSunTimeDetails = wasm.roman_sun_time(
+    BigInt(nowDate.getTime()),
     locationDetails.lat,
     locationDetails.lon,
     locationDetails.alt
   );
+
+  const todayStartEpoch = asNumber(romanSunTimeDetails.today_start);
+  const todaySunriseEpoch = asNumber(romanSunTimeDetails.today_sunrise);
+  const todaySunsetEpoch = asNumber(romanSunTimeDetails.today_sunset);
+  const lastSunChangeEpoch = asNumber(romanSunTimeDetails.last_sun_change);
+  const nextSunChangeEpoch = asNumber(romanSunTimeDetails.next_sun_change);
+
+  const nowTime = formatClockTime(nowDate.getHours(), nowDate.getMinutes());
   const romanSunclockTime = formatClockTime(
-    romanSunTime.hours,
-    romanSunTime.minutes
+    romanSunTimeDetails.hours,
+    romanSunTimeDetails.minutes
   );
-  const todayStartEpoch = asNumber(romanSunTime.today_start);
-  const todaySunriseEpoch = asNumber(romanSunTime.today_sunrise);
-  const todaySunsetEpoch = asNumber(romanSunTime.today_sunset);
-  const todaySunriseTime = formatClockTime(
-    new Date(todaySunriseEpoch).getHours(),
-    new Date(todaySunriseEpoch).getMinutes()
+  const lastSunChangeTime = formatClockTime(
+    new Date(lastSunChangeEpoch).getHours(),
+    new Date(lastSunChangeEpoch).getMinutes()
   );
-  const todaySunsetTime = formatClockTime(
-    new Date(todaySunsetEpoch).getHours(),
-    new Date(todaySunsetEpoch).getMinutes()
+  const nextSunChangeTime = formatClockTime(
+    new Date(nextSunChangeEpoch).getHours(),
+    new Date(nextSunChangeEpoch).getMinutes()
   );
-
-  const dayOrNightElement = document.getElementById("dayNightIcon");
-  dayOrNightElement.classList.remove(
-    `RomanSunclock__DayOrNight--${romanSunTime.is_day ? "night" : "day"}`
-  );
-  dayOrNightElement.classList.add(
-    `RomanSunclock__DayOrNight--${romanSunTime.is_day ? "day" : "night"}`
-  );
-
-  const nowTimeElement = document.getElementById("scTime");
-  nowTimeElement.innerText = romanSunclockTime;
 
   const locationDetailsElement = document.getElementById("scDetails");
   const localNameElement = locationName ? `<span>${locationName}</span>` : "";
   locationDetailsElement.innerHTML = `
-    <span>${formatClockTime(
-      nowTime.getHours(),
-      nowTime.getMinutes()
-    )}</span>${localNameElement}<span>${new Intl.NumberFormat("en", {
+    ${localNameElement}<span>${new Intl.NumberFormat("en", {
     maximumFractionDigits: 2,
-  }).format(romanSunTime.minute_length)} secs/min</span>
+  }).format(romanSunTimeDetails.minute_length)} secs/min</span>
+  <span>${
+    romanSunTimeDetails.is_day ? "day" : "night"
+  }time: ${lastSunChangeTime} - ${nextSunChangeTime}</span>
   `;
-
-  const calculationDetailsElement = document.getElementById("scCalcDetails");
-  calculationDetailsElement.innerHTML = `<span>sunrise: ${todaySunriseTime}</span><span>sunset: ${todaySunsetTime}</span>`;
 
   const dayClockElement = document.getElementById("dayClockImage");
   dayClockElement.innerHTML = generateSvg(
-    nowTime,
+    nowDate,
     todayStartEpoch,
     todaySunriseEpoch,
     todaySunsetEpoch
   );
 
   const dayClockHoursElement = document.getElementById("dayClockHours");
-  dayClockHoursElement.innerHTML = `<span class="RomanSunclock__Clock__RomanTime">${romanSunclockTime}</span><span class="RomanSunclock__Clock__LocalTime">${formatClockTime(
-    nowTime.getHours(),
-    nowTime.getMinutes()
-  )}</span>`;
+  dayClockHoursElement.innerHTML = `
+    <div class="RomanSunclock__DayOrNight RomanSunclock__DayOrNight--${
+      romanSunTimeDetails.is_day ? "day" : "night"
+    }"></div>
+    <div class="RomanSunclock__Clock__RomanTime">${romanSunclockTime}</div>
+    <div class="RomanSunclock__Clock__LocalTime">${nowTime}</div>
+  `;
 
-  const faceList = document.getElementsByClassName("RomanSunclock");
-  for (let i = 0; i < faceList.length; i++) {
-    faceList.item(i).classList.remove("RomanSunclock--loading");
-  }
-  return romanSunTime.minute_length;
+  const rootE = document.getElementById("scRoot");
+  rootE.classList.remove("RomanSunclock--loading");
+  return romanSunTimeDetails.minute_length;
 }
 
-navigator.permissions.query({ name: "geolocation" }).then(({ state }) => {
-  if (state === "granted") {
-    setNotification("Requesting your location. Please, wait.");
-  } else {
-    setNotification(
-      "Please, allow location services to get your local Roman Sunclock Time."
-    );
-  }
-});
-getLocation()
+navigator.permissions
+  .query({ name: "geolocation" })
+  .then(({ state }) => {
+    if (state === "granted") {
+      setNotification("Requesting your location. Please, wait.");
+    } else {
+      setNotification(
+        "Please, allow location services to get your local Roman Sunclock Time."
+      );
+    }
+    return getLocation();
+  })
   .then((locationDetails) => {
     const { lat, lon } = locationDetails;
-    getLocationName(lat, lon).then((locationName) => {
-      const intervalLength = updateCurrentRomanSunTime(
-        locationDetails,
-        locationName
-      );
-      setInterval(
-        () => updateCurrentRomanSunTime(locationDetails, locationName),
-        intervalLength * 1000 || 1000
-      );
+    const locationNamePromise = getLocationName(lat, lon);
+    return locationNamePromise.then((locationName) => ({
+      locationDetails,
+      locationName,
+    }));
+  })
+  .then(({ locationDetails, locationName }) => {
+    const intervalLength = updateCurrentRomanSunTime(
+      locationDetails,
+      locationName
+    );
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        updateCurrentRomanSunTime(locationDetails, locationName);
+      }
     });
+    setInterval(
+      () => updateCurrentRomanSunTime(locationDetails, locationName),
+      Math.min(Math.ceil(intervalLength * 1000 || 60000), 60000)
+    );
   })
   .catch((e) => {
     setNotification(
