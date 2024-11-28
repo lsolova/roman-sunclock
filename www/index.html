@@ -14,13 +14,18 @@
   <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
   <div id="scRoot" class="RomanSunclock RomanSunclock--loading">
     <div class="RomanSunclock__Container RomanSunclock__Container--front">
-      <div class="RomanSunclock__LoadingDetails">
-        <div class="RomanSunclock__Notification"></div>
-      </div>
-      <div class="RomanSunclock__Details">
-        <div id="dayNightIcon" class="RomanSunclock__DayOrNight"></div>
-        <div id="scTime" class="RomanSunclock__Time"></div>
-        <div id="scDetails" class="RomanSunclock__LocationDetails"></div>
+      <div>
+        <div class="RomanSunclock__LoadingDetails">
+          <div class="RomanSunclock__Notification">Please, wait while loading.</div>
+        </div>
+        <div class="RomanSunclock__Details">
+          <span>Roman Sunclock Time</span>
+        </div>
+        <div class="RomanSunclock__Clock">
+          <div id="dayClockImage" class="RomanSunclock__Clock__Image"></div>
+          <div id="dayClockHours" class="RomanSunclock__Clock__Hours"></div>
+        </div>
+        <div id="scDetails" class="RomanSunclock__Details"></div>
       </div>
       <div class="RomanSunclock__Logo">
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450" xml:space="preserve">
@@ -30,15 +35,13 @@
       </div>
     </div>
     <div class="RomanSunclock__Container RomanSunclock__Container--back">
-      <div class="RomanSunclock__Data">
-        <div class="RomanSunclock__Details">
-          <span>Roman Sunclock Time</span>
+      <div>
+        <div class="RomanSunclock__Details RomanSunclock__Description">
+          <p>Roman Sunclock Time is a special timezone based on your location and on the movement of the Sun.</p>
+          <p>Time was measured in the ancient Roman Empire based on the Sun. Daytime and nighttime were always 12 hours, but the length of hour was varying. This application shows a version of that time calculation.</p>
+          <div class="RomanSunclock__Version">v%APP_VERSION%.<a
+              href="https://github.com/lsolova/roman-sunclock">%COMMIT_SHA%</a></div>
         </div>
-        <div class="RomanSunclock__Clock">
-          <div id="dayClockImage" class="RomanSunclock__Clock__Image"></div>
-          <div id="dayClockHours" class="RomanSunclock__Clock__Hours"></div>
-        </div>
-        <div id="scCalcDetails" class="RomanSunclock__Details"></div>
       </div>
       <div class="RomanSunclock__Logo">
         <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 450 450" xml:space="preserve">
@@ -48,8 +51,6 @@
       </div>
     </div>
   </div>
-  <div class="RomanSunclock__Version">v%APP_VERSION%.<a
-      href="https://github.com/lsolova/roman-sunclock">%COMMIT_SHA%</a></div>
   <script src="./bootstrap.js" type="module"></script>
 </body>
 
