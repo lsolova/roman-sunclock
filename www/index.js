@@ -118,8 +118,8 @@ function loadLocationDetails() {
     "rsctLocationDetails"
   );
   if (locationDetailsString) {
-    const locationDetails = JSON.parse(loadLocationDetailsString);
-    if (Date.now() < loadLocationDetails.expiry) {
+    const locationDetails = JSON.parse(locationDetailsString);
+    if (Date.now() < locationDetails.expiry) {
       return locationDetails;
     }
   }
@@ -184,7 +184,7 @@ function getLocation() {
     function error(err) {
       const locationDetails = loadLocationDetails();
       if (locationDetails) {
-        resolve(loadLocationDetails);
+        resolve(locationDetails);
         return;
       }
       reject(new Error(`ERROR(${err.code}): ${err.message}`));
@@ -288,7 +288,13 @@ navigator.permissions
   .query({ name: "geolocation" })
   .then(({ state }) => {
     if (state === "granted") {
-      setNotification("Requesting your location. Please, wait.");
+      const locationDetails = loadLocationDetails();
+      if (locationDetails) {
+        const locationName = loadLocationName(locationDetails.lat, locationDetails.lon);
+        updateCurrentRomanSunTime(locationDetails, locationName);
+      } else {
+        setNotification("Requesting your location. Please, wait.");
+      }
     } else {
       setNotification(
         "Please, allow location services to get your local Roman Sunclock Time."

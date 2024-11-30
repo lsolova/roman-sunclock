@@ -51,12 +51,21 @@ body {
     transform: rotateY(180deg);
 }
 
+.RomanSunclock__Container--back .RomanSunclock__Description {
+    visibility: hidden;
+}
+
+
 .RomanSunclock--flipped .RomanSunclock__Container--front {
     transform: rotateY(-180deg);
 }
 
 .RomanSunclock--flipped .RomanSunclock__Container--back {
     transform: rotateY(0);
+}
+
+.RomanSunclock--flipped .RomanSunclock__Container--back .RomanSunclock__Description {
+    visibility: visible;
 }
 
 .RomanSunclock--loading .RomanSunclock__LoadingDetails {
