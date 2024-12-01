@@ -1,14 +1,11 @@
 use crate::sun_calculator;
+use crate::time_calculators::{get_day_end, get_day_start};
 use crate::types::{PartialOrFullDayNight, RomanTimeDetails};
 use std::cmp::{max, min};
 
-mod time_calculators;
-
 struct DayDetails {
-    today_start: i64,
     today_sunrise_epoch: i64,
     today_sunset_epoch: i64,
-    today_end: i64,
     last_sun_change: i64,
     next_sun_change: i64,
     is_day: bool,
@@ -28,15 +25,14 @@ fn get_closest_sun_change(
     alt: f32,
     follow_day: bool,
 ) -> DayDetails {
-    let day_start = time_calculators::get_day_start(current_epoch);
-    let day_end = time_calculators::get_day_end(current_epoch);
-    let calculated_sun_changes = sun_calculator::calculate_sunrise_sunset(current_epoch, lat, lon, alt);
+    let day_start = get_day_start(current_epoch);
+    let day_end = get_day_end(current_epoch);
+    let calculated_sun_changes =
+        sun_calculator::calculate_sunrise_sunset(current_epoch, lat, lon, alt);
     match calculated_sun_changes {
         PartialOrFullDayNight::FullDayNight(fdn) => DayDetails {
             last_sun_change: day_start,
             next_sun_change: day_end,
-            today_start: day_start,
-            today_end: day_end,
             today_sunrise_epoch: if fdn.is_day { day_start } else { day_end },
             today_sunset_epoch: if fdn.is_day { day_start } else { day_end },
             is_day: fdn.is_day,
@@ -56,10 +52,8 @@ fn get_closest_sun_change(
                 get_closest_sun_change(yesterday_epoch, lat, lon, alt, false).today_sunset_epoch
             };
             DayDetails {
-                today_start: day_start,
                 today_sunrise_epoch: sd.sunrise_epoch,
                 today_sunset_epoch: sd.sunset_epoch,
-                today_end: day_end,
                 last_sun_change: min(inclusive_sunrise_epoch, inclusive_sunset_epoch),
                 next_sun_change: max(inclusive_sunrise_epoch, inclusive_sunset_epoch),
                 is_day: inclusive_sunrise_epoch <= current_epoch
@@ -104,14 +98,8 @@ pub fn calculate_roman_sun_time(
         minutes: (minutes_since_sunrise % 60),
         last_sun_change: today_details.last_sun_change,
         next_sun_change: today_details.next_sun_change,
-        today_start: today_details.today_start,
-        today_end: today_details.today_end,
-        today_sunrise: today_details.today_sunrise_epoch,
-        today_sunset: today_details.today_sunset_epoch,
-        total_minutes: minutes_since_sunrise + (time_of_day_adjustment * 60),
         minute_length: roman_minute_length as f32 / 1000.0,
         is_day: today_details.is_day,
-        is_morning: today_details.is_morning,
     }
 }
 
@@ -135,14 +123,8 @@ mod tests {
                 minutes: 38,
                 last_sun_change: 1654803323788, // Thu, 09 Jun 2022 19:35:23 GMT
                 next_sun_change: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
-                today_start: 1654819200000, // Fri, 10 Jun 2022 00:00:00 GMT
-                today_end: 1654905599999, // Fri, 10 Jun 2022 23:59:59 GMT
-                today_sunrise: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
-                today_sunset: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
-                total_minutes: -22,
                 minute_length: 46.948,
                 is_day: false,
-                is_morning: true
             }
         );
     }
@@ -157,14 +139,8 @@ mod tests {
                 minutes: 37,
                 last_sun_change: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
                 next_sun_change: 1654923521349, // Sat, 11 Jun 2022 04:58:41 GMT
-                today_start: 1654819200000, // Fri, 10 Jun 2022 00:00:00 GMT
-                today_end: 1654905599999, // Fri, 10 Jun 2022 23:59:59 GMT
-                today_sunrise: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
-                today_sunset: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
-                total_minutes: 1417,
                 minute_length: 46.9,
                 is_day: false,
-                is_morning: false
             }
         );
     }
@@ -179,14 +155,8 @@ mod tests {
                 minutes: 17,
                 last_sun_change: 1668093290048, // Thu, 10 Nov 2022 15:14:50 GMT
                 next_sun_change: 1668145335985, // Fri, 11 Nov 2022 05:42:15 GMT
-                today_start: 1668038400000, // Thu, 10 Nov 2022 00:00:00 GMT
-                today_end: 1668124799999, // Thu, 10 Nov 2022 23:59:59 GMT
-                today_sunrise: 1668058844950, // Thu, 10 Nov 2022 05:40:44 GMT
-                today_sunset: 1668093290048, // Thu, 10 Nov 2022 15:14:50 GMT
-                total_minutes: 1457,
                 minute_length: 72.286,
                 is_day: false,
-                is_morning: false
             }
         );
     }
@@ -201,14 +171,8 @@ mod tests {
                 minutes: 28,
                 last_sun_change: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
                 next_sun_change: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
-                today_start: 1654819200000, // Fri, 10 Jun 2022 00:00:00 GMT
-                today_end: 1654905599999, // Fri, 10 Jun 2022 23:59:59 GMT
-                today_sunrise: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
-                today_sunset: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
-                total_minutes: 508,
                 minute_length: 73.092,
                 is_day: true,
-                is_morning: false
             }
         );
     }
@@ -227,14 +191,8 @@ mod tests {
                 minutes: 50,
                 last_sun_change: 1731949632505, // Mon, 18 Nov 2024 17:07:12 GMT
                 next_sun_change: 1731999614212, // Tue, 19 Nov 2024 07:00:14 GMT
-                today_start: 1731888000000, // Mon, 18 Nov 2024 00:00:00 GMT
-                today_end: 1731974399999, // Mon, 18 Nov 2024 23:59:59 GMT
-                today_sunrise: 1731913152254, // Mon, 18 Nov 2024 06:59:12 GMT
-                today_sunset: 1731949632505, // Mon, 18 Nov 2024 17:07:12 GMT
-                total_minutes: 1130,
                 minute_length: 69.419,
                 is_day: false,
-                is_morning: false
             }
         );
     }
@@ -249,14 +207,8 @@ mod tests {
                 minutes: 26,
                 last_sun_change: 1732035998446, // Tue, 19 Nov 2024 18:06:38 GMT+01:00
                 next_sun_change: 1732086075901, // Wed, 20 Nov 2024 08:01:15 GMT+01:00
-                today_start: 1731974400000, // Tue, 19 Nov 2024 01:00:00 GMT+01:00
-                today_end: 1732060799999, // Tue, 20 Nov 2024 00:59:59 GMT+01:00
-                today_sunrise: 1731999614212, // Tue, 19 Nov 2024 08:00:14 GMT+01:00
-                today_sunset: 1732035998446, // Tue, 19 Nov 2024 18:06:38 GMT+01:00
-                total_minutes: 1406,
                 minute_length: 69.552,
                 is_day: false,
-                is_morning: false
             }
         );
     }
