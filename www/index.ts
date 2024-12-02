@@ -1,5 +1,4 @@
 import { asNumber, formatClockTime } from "./src/converters";
-import { generateSvg } from "./src/svg-generator";
 import { getLocation, loadLocationDetails } from "./src/location";
 import { getLocationName, loadLocationName } from "./src/location-name";
 import { Location } from "./src/types";
@@ -22,12 +21,14 @@ function updateCurrentRomanSunTime(
 ) {
   const nowDate = new Date();
 
-  const romanSunTimeDetails = romanSunTime(
-    BigInt(nowDate.getTime()),
-    locationDetails.lat,
-    locationDetails.lon,
-    locationDetails.alt
-  );
+  const { time_details: romanSunTimeDetails, clock_svg: clockSvg } =
+    romanSunTime(
+      BigInt(nowDate.getTime()),
+      BigInt(nowDate.getTimezoneOffset()),
+      locationDetails.lat,
+      locationDetails.lon,
+      locationDetails.alt
+    );
 
   const lastSunChangeEpoch = asNumber(romanSunTimeDetails.last_sun_change);
   const nextSunChangeEpoch = asNumber(romanSunTimeDetails.next_sun_change);
@@ -61,12 +62,7 @@ function updateCurrentRomanSunTime(
   );
 
   const dayClockElement = document.getElementById("dayClockImage");
-  const sunriseEpoch = romanSunTimeDetails.is_day ? lastSunChangeEpoch : nextSunChangeEpoch;
-  const sunsetEpoch = romanSunTimeDetails.is_day ? nextSunChangeEpoch : lastSunChangeEpoch;
-  setElementContent(
-    dayClockElement,
-    generateSvg(nowDate.getTime(), sunriseEpoch, sunsetEpoch)
-  );
+  setElementContent(dayClockElement, clockSvg);
 
   const dayClockHoursElement = document.getElementById("dayClockHours");
   setElementContent(

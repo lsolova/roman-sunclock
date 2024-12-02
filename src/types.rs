@@ -18,7 +18,7 @@ pub enum PartialOrFullDayNight {
     FullDayNight(FullDayOrNight),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[wasm_bindgen]
 pub struct RomanTimeDetails {
     pub hours: i32,
@@ -33,4 +33,11 @@ impl Display for RomanTimeDetails {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}:{}", self.hours, self.minutes)
     }
+}
+
+#[derive(Debug, PartialEq)]
+#[wasm_bindgen(getter_with_clone)]
+pub struct RomanSunclockResult {
+    pub time_details: RomanTimeDetails,
+    pub clock_svg: String,
 }

@@ -17,7 +17,6 @@ pub fn get_day_end(timestamp_millis: i64) -> i64 {
 }
 
 #[cfg(test)]
-
 mod day_start_tests {
     use super::*;
 
