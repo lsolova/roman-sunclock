@@ -16,7 +16,7 @@ Some parts of the application were implemented on the easiest, maybe quick-and-d
 ## Resources
 
 - [BBC article][1]
-- [Icons from iconfinder](https://www.iconfinder.com)
+- Original icons from [iconfinder](https://www.iconfinder.com)
 - [MDN: Geolocation coordinates](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates)
 - [Rust WASM book](https://rustwasm.github.io/docs/book/)
 - [Wikipedia: Julian day](https://en.wikipedia.org/wiki/Julian_day)

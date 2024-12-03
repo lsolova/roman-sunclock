@@ -33,11 +33,6 @@ function updateCurrentRomanSunTime(
   const lastSunChangeEpoch = asNumber(romanSunTimeDetails.last_sun_change);
   const nextSunChangeEpoch = asNumber(romanSunTimeDetails.next_sun_change);
 
-  const nowTime = formatClockTime(nowDate.getHours(), nowDate.getMinutes());
-  const romanSunclockTime = formatClockTime(
-    romanSunTimeDetails.hours,
-    romanSunTimeDetails.minutes
-  );
   const lastSunChangeTime = formatClockTime(
     new Date(lastSunChangeEpoch).getHours(),
     new Date(lastSunChangeEpoch).getMinutes()
@@ -63,18 +58,6 @@ function updateCurrentRomanSunTime(
 
   const dayClockElement = document.getElementById("dayClockImage");
   setElementContent(dayClockElement, clockSvg);
-
-  const dayClockHoursElement = document.getElementById("dayClockHours");
-  setElementContent(
-    dayClockHoursElement,
-    `
-    <div class="RomanSunclock__DayOrNight RomanSunclock__DayOrNight--${
-      romanSunTimeDetails.is_day ? "day" : "night"
-    }"></div>
-    <div class="RomanSunclock__Clock__RomanTime">${romanSunclockTime}</div>
-    <div class="RomanSunclock__Clock__LocalTime">${nowTime}</div>
-  `
-  );
 
   const rootE = document.getElementById("scRoot");
   rootE?.classList.remove("RomanSunclock--loading");
