@@ -1,6 +1,7 @@
 import { asNumber, formatClockTime } from "./src/converters";
 import { getLocation, loadLocationDetails } from "./src/location";
 import { getLocationName, loadLocationName } from "./src/location-name";
+import { getRequestedDate } from "./src/time";
 import { Location } from "./src/types";
 import { roman_sun_time as romanSunTime } from "roman-sunclock";
 
@@ -19,12 +20,12 @@ function updateCurrentRomanSunTime(
   locationDetails: Location,
   locationName: string | null
 ) {
-  const nowDate = new Date();
+  const requestedDate = getRequestedDate();
 
   const { time_details: romanSunTimeDetails, clock_svg: clockSvg } =
     romanSunTime(
-      BigInt(nowDate.getTime()),
-      BigInt(nowDate.getTimezoneOffset()),
+      BigInt(requestedDate.getTime()),
+      BigInt(requestedDate.getTimezoneOffset()),
       locationDetails.lat,
       locationDetails.lon,
       locationDetails.alt

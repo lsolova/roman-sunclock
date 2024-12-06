@@ -13,6 +13,17 @@ This is an experiment
 
 Some parts of the application were implemented on the easiest, maybe quick-and-dirty way. Main goal was testing new technologies.
 
+## Usage
+
+Open [Roman Sunclock Time][3] and allow using location.
+
+For a certain point on earth, it is possible to provide GPS coordinates in the URL. It goes into the hash part, with a pipe (`|`) separator. Examples:
+
+- Location only: <https://rsct.solova.com/#36.6955794844035|-4.4513623935250655|0>
+- Location and time: <https://rsct.solova.com/#68.2992471|22.2632669|0|2024-11-15T16:55:00>
+
+> Note: If location is defined such a way, local time might be inaccurate, due to timezone differences.
+
 ## Resources
 
 - [BBC article][1]
@@ -25,3 +36,4 @@ Some parts of the application were implemented on the easiest, maybe quick-and-d
 
 [1]: https://www.bbc.com/future/article/20240328-the-ancient-roman-alternative-to-daylight-savings-time
 [2]: https://en.m.wikipedia.org/wiki/Roman_timekeeping
+[3]: https://rsct.solova.com

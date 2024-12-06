@@ -1,4 +1,5 @@
 import { Location } from "./types";
+import { getLocationHash } from "./utils";
 
 function saveLocationDetails(locationDetails: Location) {
   window.localStorage.setItem(
@@ -23,8 +24,34 @@ export function loadLocationDetails(): Location | null {
   return null;
 }
 
+const getLocationByHash = (): Location | null => {
+  const sp = getLocationHash();
+  if (sp.length >= 3) {
+    const lat = Number.parseFloat(sp[0]);
+    const lon = Number.parseFloat(sp[1]);
+    const alt = Number.parseFloat(sp[2]);
+    if (
+      -90 <= lat &&
+      lat <= 90 &&
+      -180 <= lon &&
+      lon <= 180 &&
+      0 <= alt &&
+      alt <= 5000
+    ) {
+      return { lat, lon, alt, source: "hash" };
+    }
+  }
+  return null;
+};
+
 export function getLocation(): Promise<Location> {
   return new Promise((resolve, reject) => {
+    const location = getLocationByHash();
+    if (location !== null) {
+      resolve(location);
+      return;
+    }
+
     const options = {
       enableHighAccuracy: true,
       timeout: 5000,
@@ -38,6 +65,7 @@ export function getLocation(): Promise<Location> {
         lat: crd.latitude,
         lon: crd.longitude,
         alt: crd.altitude || 0,
+        source: "gps",
       };
 
       saveLocationDetails(locationDetails);
