@@ -25,14 +25,18 @@ function updateCurrentRomanSunTime(
   const { time_details: romanSunTimeDetails, clock_svg: clockSvg } =
     romanSunTime(
       BigInt(requestedDate.getTime()),
-      BigInt(requestedDate.getTimezoneOffset()),
+      requestedDate.getTimezoneOffset(),
       locationDetails.lat,
       locationDetails.lon,
       locationDetails.alt
     );
 
-  const lastSunChangeEpoch = asNumber(romanSunTimeDetails.last_sun_change);
-  const nextSunChangeEpoch = asNumber(romanSunTimeDetails.next_sun_change);
+  const lastSunChangeEpoch = asNumber(
+    romanSunTimeDetails.last_sun_change ?? BigInt(0)
+  );
+  const nextSunChangeEpoch = asNumber(
+    romanSunTimeDetails.next_sun_change ?? BigInt(0)
+  );
 
   const lastSunChangeTime = formatClockTime(
     new Date(lastSunChangeEpoch).getHours(),
@@ -45,15 +49,20 @@ function updateCurrentRomanSunTime(
 
   const locationDetailsElement = document.getElementById("scDetails");
   const localNameElement = locationName ? `<span>${locationName}</span>` : "";
+  const timeInfo = {
+    "fullDay": "daytime only",
+    "fullNight": "nighttime only",
+    "normalDay": "daytime: %time%",
+    "normalNight": "nighttime: %time%",
+  }[romanSunTimeDetails.day_type].replace("%time%", `${lastSunChangeTime} - ${nextSunChangeTime}`);
+
   setElementContent(
     locationDetailsElement,
     `
     ${localNameElement}<span>${new Intl.NumberFormat("en", {
       maximumFractionDigits: 2,
     }).format(romanSunTimeDetails.minute_length)} secs/min</span>
-  <span>${
-    romanSunTimeDetails.is_day ? "day" : "night"
-  }time: ${lastSunChangeTime} - ${nextSunChangeTime}</span>
+  <span>${timeInfo}</span>
   `
   );
 

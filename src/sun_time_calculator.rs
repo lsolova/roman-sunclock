@@ -1,105 +1,195 @@
-use crate::sun_calculator;
-use crate::time_calculators::{get_day_end, get_day_start};
-use crate::types::{PartialOrFullDayNight, RomanTimeDetails};
+use crate::sun_calculator::calculate_sunrise_sunset;
+use crate::time_calculators::get_day_start;
+use crate::types::{PointOfTime, SunMovementResult, TimeType, Timeline};
+use crate::wasm_types::{DayType, RomanTimeDetails};
 use std::cmp::{max, min};
-
-struct DayDetails {
-    today_sunrise_epoch: i64,
-    today_sunset_epoch: i64,
-    last_sun_change: i64,
-    next_sun_change: i64,
-    is_day: bool,
-    is_morning: bool,
-}
 
 static DAY_MILLISECONDS: i64 = 86400000;
 
-/**
- * @param follow_day Get closest sun change could go to infinite loop, when surrounding days should be always
- *                   calculated. This parameter is used to break the loop and calculate only one level deep.
- */
-fn get_closest_sun_change(
-    current_epoch: i64,
-    lat: f32,
-    lon: f32,
-    alt: f32,
-    follow_day: bool,
-) -> DayDetails {
-    let day_start = get_day_start(current_epoch);
-    let day_end = get_day_end(current_epoch);
-    let calculated_sun_changes =
-        sun_calculator::calculate_sunrise_sunset(current_epoch, lat, lon, alt);
-    match calculated_sun_changes {
-        PartialOrFullDayNight::FullDayNight(fdn) => DayDetails {
-            last_sun_change: day_start,
-            next_sun_change: day_end,
-            today_sunrise_epoch: if fdn.is_day { day_start } else { day_end },
-            today_sunset_epoch: if fdn.is_day { day_start } else { day_end },
-            is_day: fdn.is_day,
-            is_morning: !fdn.is_day,
-        },
-        PartialOrFullDayNight::PartialDayNight(sd) => {
-            let inclusive_sunrise_epoch = if !follow_day || current_epoch <= sd.sunset_epoch {
-                sd.sunrise_epoch
-            } else {
-                let tomorrow_epoch = current_epoch + DAY_MILLISECONDS;
-                get_closest_sun_change(tomorrow_epoch, lat, lon, alt, false).today_sunrise_epoch
-            };
-            let inclusive_sunset_epoch = if !follow_day || current_epoch >= sd.sunrise_epoch {
-                sd.sunset_epoch
-            } else {
-                let yesterday_epoch = current_epoch - (DAY_MILLISECONDS / 2);
-                get_closest_sun_change(yesterday_epoch, lat, lon, alt, false).today_sunset_epoch
-            };
-            DayDetails {
-                today_sunrise_epoch: sd.sunrise_epoch,
-                today_sunset_epoch: sd.sunset_epoch,
-                last_sun_change: min(inclusive_sunrise_epoch, inclusive_sunset_epoch),
-                next_sun_change: max(inclusive_sunrise_epoch, inclusive_sunset_epoch),
-                is_day: inclusive_sunrise_epoch <= current_epoch
-                    && current_epoch <= inclusive_sunset_epoch,
-                is_morning: current_epoch <= sd.sunrise_epoch,
+fn build_timeline(requested_epoch: i64, lat: f32, lon: f32, alt: f32) -> Timeline {
+    let mut day_type;
+
+    let day_start_epoch = get_day_start(requested_epoch);
+    let mut last_sun_change: Option<PointOfTime> = None;
+    let mut next_sun_change: Option<PointOfTime> = None;
+
+    match calculate_sunrise_sunset(requested_epoch, lat, lon, alt) {
+        SunMovementResult::NormalDayAndNight(n) => {
+            // Get the closest to requested (max)
+            let mut last_sun_change_epoch = i64::MIN;
+            let mut last_sun_change_time_type = TimeType::Sunrise;
+            if n.sunrise_epoch < requested_epoch && last_sun_change_epoch < n.sunrise_epoch {
+                last_sun_change_epoch = n.sunrise_epoch;
             }
+            if n.sunset_epoch < requested_epoch && last_sun_change_epoch < n.sunset_epoch {
+                last_sun_change_epoch = n.sunset_epoch;
+                last_sun_change_time_type = TimeType::Sunset;
+            }
+
+            if i64::MIN < last_sun_change_epoch {
+                last_sun_change = Some(PointOfTime {
+                    time_type: last_sun_change_time_type,
+                    epoch: last_sun_change_epoch,
+                })
+            }
+
+            // Get the closest (min)
+            let mut next_sun_change_epoch = i64::MAX;
+            let mut next_sun_change_time_type = TimeType::Sunrise;
+            if requested_epoch < n.sunrise_epoch && n.sunrise_epoch < next_sun_change_epoch {
+                next_sun_change_epoch = n.sunrise_epoch;
+            }
+            if requested_epoch < n.sunset_epoch && n.sunset_epoch < next_sun_change_epoch {
+                next_sun_change_epoch = n.sunset_epoch;
+                next_sun_change_time_type = TimeType::Sunset;
+            }
+            if next_sun_change_epoch < i64::MAX {
+                next_sun_change = Some(PointOfTime {
+                    time_type: next_sun_change_time_type,
+                    epoch: next_sun_change_epoch,
+                })
+            }
+
+            day_type = DayType::NormalDay;
         }
+        SunMovementResult::FullDay => {
+            day_type = DayType::FullDay;
+        }
+        SunMovementResult::FullNight => {
+            day_type = DayType::FullNight;
+        }
+    };
+
+    // Read yesterday if needed
+    let check_yesterday = if let Some(v) = last_sun_change {
+        requested_epoch < v.epoch
+    } else {
+        true
+    };
+    if check_yesterday {
+        match calculate_sunrise_sunset(requested_epoch - DAY_MILLISECONDS, lat, lon, alt) {
+            SunMovementResult::NormalDayAndNight(n) => {
+                last_sun_change = Some(PointOfTime {
+                    time_type: if n.sunrise_epoch < n.sunset_epoch {
+                        TimeType::Sunset
+                    } else {
+                        TimeType::Sunrise
+                    },
+                    epoch: max(n.sunrise_epoch, n.sunset_epoch),
+                });
+            }
+            SunMovementResult::FullDay => {
+                day_type = DayType::FullDay;
+            }
+            SunMovementResult::FullNight => {
+                day_type = DayType::FullNight;
+            }
+        };
+    }
+
+    // Read tomorrow if needed
+    let check_tomorrow = if let Some(v) = next_sun_change {
+        v.epoch < requested_epoch
+    } else {
+        true
+    };
+    if check_tomorrow {
+        match calculate_sunrise_sunset(requested_epoch + DAY_MILLISECONDS, lat, lon, alt) {
+            SunMovementResult::NormalDayAndNight(n) => {
+                next_sun_change = Some(PointOfTime {
+                    time_type: if n.sunrise_epoch < n.sunset_epoch {
+                        TimeType::Sunrise
+                    } else {
+                        TimeType::Sunset
+                    },
+                    epoch: min(n.sunrise_epoch, n.sunset_epoch),
+                });
+            }
+            SunMovementResult::FullDay => {
+                day_type = DayType::FullDay;
+            }
+            SunMovementResult::FullNight => {
+                day_type = DayType::FullNight;
+            }
+        };
+    }
+
+    Timeline {
+        day_type,
+        day_start_epoch,
+        last_sun_change,
+        next_sun_change,
     }
 }
 
 pub fn calculate_roman_sun_time(
-    current_epoch: i64,
+    requested_epoch: i64,
     lat: f32,
     lon: f32,
     alt: f32,
 ) -> RomanTimeDetails {
-    let today_details = get_closest_sun_change(current_epoch, lat, lon, alt, true);
+    let timeline = build_timeline(requested_epoch, lat, lon, alt);
 
-    let roman_minute_length =
-        (today_details.last_sun_change - today_details.next_sun_change).abs() / 720;
-    let duration_since_sunrise =
-        current_epoch - min(today_details.last_sun_change, today_details.next_sun_change);
-    let minutes_since_sunrise = (duration_since_sunrise / roman_minute_length) as i32;
-    let time_of_day_adjustment = if today_details.is_morning {
-        -6
-    } else if today_details.is_day {
-        6
-    } else {
-        18
-    };
-    let roman_hours = ((minutes_since_sunrise) / 60) + time_of_day_adjustment;
-    let roman_hours_adjustment = if roman_hours < 0 {
-        24
-    } else if roman_hours >= 24 {
-        -24
-    } else {
-        0
-    };
+    let (roman_minute_length, duration_since_lc, clock_start, day_type) =
+        match (timeline.last_sun_change, timeline.next_sun_change) {
+            (Some(lc), Some(nc)) => {
+                let lc_epoch = lc.epoch;
+                let roman_minute_length = (nc.epoch - lc_epoch) / 720;
+                let duration_since_lc = requested_epoch - min(nc.epoch, lc_epoch);
+                let clock_start = if lc.time_type == TimeType::Sunrise {
+                    6
+                } else {
+                    18
+                };
+                let day_type = if lc.time_type == TimeType::Sunrise {
+                    DayType::NormalDay
+                } else {
+                    DayType::NormalNight
+                };
+                (
+                    roman_minute_length,
+                    duration_since_lc,
+                    clock_start,
+                    day_type,
+                )
+            }
+            _ => {
+                let roman_minute_length = 120000;
+                let duration_since_lc = requested_epoch - timeline.day_start_epoch;
+                println!(
+                    "duration since {} in {}, d: {}",
+                    requested_epoch, timeline.day_start_epoch, duration_since_lc
+                );
+                let clock_start = if timeline.day_type == DayType::FullDay {
+                    6
+                } else {
+                    18
+                };
+                (
+                    roman_minute_length,
+                    duration_since_lc,
+                    clock_start,
+                    timeline.day_type,
+                )
+            }
+        };
+    let minutes_since_lc = (duration_since_lc / roman_minute_length) as i32;
+    let roman_hours = ((minutes_since_lc / 60) + clock_start) % 24;
+    let roman_minutes = minutes_since_lc % 60;
 
     RomanTimeDetails {
-        hours: roman_hours + roman_hours_adjustment,
-        minutes: (minutes_since_sunrise % 60),
-        last_sun_change: today_details.last_sun_change,
-        next_sun_change: today_details.next_sun_change,
+        hours: roman_hours,
+        minutes: roman_minutes,
         minute_length: roman_minute_length as f32 / 1000.0,
-        is_day: today_details.is_day,
+        day_type,
+        last_sun_change: match timeline.last_sun_change {
+            Some(lsc) => Some(lsc.epoch),
+            _ => None,
+        },
+        next_sun_change: match timeline.next_sun_change {
+            Some(nsc) => Some(nsc.epoch),
+            _ => None,
+        },
     }
 }
 
@@ -121,10 +211,10 @@ mod tests {
             RomanTimeDetails {
                 hours: 23,
                 minutes: 38,
-                last_sun_change: 1654803323788, // Thu, 09 Jun 2022 19:35:23 GMT
-                next_sun_change: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
+                last_sun_change: Some(1654803323788), // Thu, 09 Jun 2022 19:35:23 GMT
+                next_sun_change: Some(1654837126628), // Fri, 10 Jun 2022 04:58:46 GMT
                 minute_length: 46.948,
-                is_day: false,
+                day_type: DayType::NormalNight,
             }
         );
     }
@@ -137,10 +227,10 @@ mod tests {
             RomanTimeDetails {
                 hours: 23,
                 minutes: 37,
-                last_sun_change: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
-                next_sun_change: 1654923521349, // Sat, 11 Jun 2022 04:58:41 GMT
+                last_sun_change: Some(1654889753237), // Fri, 10 Jun 2022 19:35:53 GMT
+                next_sun_change: Some(1654923521349), // Sat, 11 Jun 2022 04:58:41 GMT
                 minute_length: 46.9,
-                is_day: false,
+                day_type: DayType::NormalNight,
             }
         );
     }
@@ -153,10 +243,10 @@ mod tests {
             RomanTimeDetails {
                 hours: 0,
                 minutes: 17,
-                last_sun_change: 1668093290048, // Thu, 10 Nov 2022 15:14:50 GMT
-                next_sun_change: 1668145335985, // Fri, 11 Nov 2022 05:42:15 GMT
+                last_sun_change: Some(1668093290048), // Thu, 10 Nov 2022 15:14:50 GMT
+                next_sun_change: Some(1668145335985), // Fri, 11 Nov 2022 05:42:15 GMT
                 minute_length: 72.286,
-                is_day: false,
+                day_type: DayType::NormalNight,
             }
         );
     }
@@ -169,10 +259,10 @@ mod tests {
             RomanTimeDetails {
                 hours: 8,
                 minutes: 28,
-                last_sun_change: 1654837126628, // Fri, 10 Jun 2022 04:58:46 GMT
-                next_sun_change: 1654889753237, // Fri, 10 Jun 2022 19:35:53 GMT
+                last_sun_change: Some(1654837126628), // Fri, 10 Jun 2022 04:58:46 GMT
+                next_sun_change: Some(1654889753237), // Fri, 10 Jun 2022 19:35:53 GMT
                 minute_length: 73.092,
-                is_day: true,
+                day_type: DayType::NormalDay,
             }
         );
     }
@@ -189,10 +279,10 @@ mod tests {
             RomanTimeDetails {
                 hours: 18,
                 minutes: 50,
-                last_sun_change: 1731949632505, // Mon, 18 Nov 2024 17:07:12 GMT
-                next_sun_change: 1731999614212, // Tue, 19 Nov 2024 07:00:14 GMT
+                last_sun_change: Some(1731949632505), // Mon, 18 Nov 2024 17:07:12 GMT
+                next_sun_change: Some(1731999614212), // Tue, 19 Nov 2024 07:00:14 GMT
                 minute_length: 69.419,
-                is_day: false,
+                day_type: DayType::NormalNight,
             }
         );
     }
@@ -205,10 +295,30 @@ mod tests {
             RomanTimeDetails {
                 hours: 23,
                 minutes: 26,
-                last_sun_change: 1732035998446, // Tue, 19 Nov 2024 18:06:38 GMT+01:00
-                next_sun_change: 1732086075901, // Wed, 20 Nov 2024 08:01:15 GMT+01:00
+                last_sun_change: Some(1732035998446), // Tue, 19 Nov 2024 18:06:38 GMT+01:00
+                next_sun_change: Some(1732086075901), // Wed, 20 Nov 2024 08:01:15 GMT+01:00
                 minute_length: 69.552,
-                is_day: false,
+                day_type: DayType::NormalNight,
+            }
+        );
+    }
+
+    #[test]
+    fn test_last_day_with_sun_in_the_night() {
+        let epoch = 1733500560000; // 2024-12-06T16:56:00
+        let lat = 68.2992471;
+        let lon = 22.2632669;
+        let alt = 0.0;
+        let result = calculate_roman_sun_time(epoch, lat, lon, alt);
+        assert_eq!(
+            result,
+            RomanTimeDetails {
+                hours: 1,
+                minutes: 58,
+                last_sun_change: Some(1733480947740), // 2024-12-06T10:29:07.740Z
+                next_sun_change: None,
+                minute_length: 120.0,
+                day_type: DayType::FullNight,
             }
         );
     }

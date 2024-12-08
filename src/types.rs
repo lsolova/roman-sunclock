@@ -1,43 +1,52 @@
-use std::fmt::Display;
-use wasm_bindgen::prelude::*;
+use std::cmp::Ordering;
+
+use crate::wasm_types::DayType;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum TimeType {
+    Sunrise,
+    Sunset,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct PointOfTime {
+    pub time_type: TimeType,
+    pub epoch: i64,
+}
+
+impl Ord for PointOfTime {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.epoch.cmp(&other.epoch)
+    }
+}
+impl PartialOrd for PointOfTime {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl PartialEq for PointOfTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.epoch == other.epoch
+    }
+}
+impl Eq for PointOfTime {}
 
 #[derive(Debug)]
-pub struct SunDetails {
+pub struct NormalDayAndNight {
     pub sunrise_epoch: i64,
     pub sunset_epoch: i64,
 }
 
 #[derive(Debug)]
-pub struct FullDayOrNight {
-    pub is_day: bool,
+pub enum SunMovementResult {
+    NormalDayAndNight(NormalDayAndNight),
+    FullDay,
+    FullNight,
 }
 
-#[derive(Debug)]
-pub enum PartialOrFullDayNight {
-    PartialDayNight(SunDetails),
-    FullDayNight(FullDayOrNight),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-#[wasm_bindgen]
-pub struct RomanTimeDetails {
-    pub hours: i32,
-    pub minutes: i32,
-    pub last_sun_change: i64,
-    pub next_sun_change: i64,
-    pub minute_length: f32,
-    pub is_day: bool,
-}
-
-impl Display for RomanTimeDetails {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}:{}", self.hours, self.minutes)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-#[wasm_bindgen(getter_with_clone)]
-pub struct RomanSunclockResult {
-    pub time_details: RomanTimeDetails,
-    pub clock_svg: String,
+pub struct Timeline {
+    pub day_type: DayType,
+    pub day_start_epoch: i64,
+    pub last_sun_change: Option<PointOfTime>,
+    pub next_sun_change: Option<PointOfTime>,
 }

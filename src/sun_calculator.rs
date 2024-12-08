@@ -1,4 +1,4 @@
-use crate::types::{FullDayOrNight, PartialOrFullDayNight, SunDetails};
+use crate::types::{NormalDayAndNight, SunMovementResult};
 
 mod julian_converters;
 
@@ -16,7 +16,7 @@ static LEAP_SECONDS_AND_TERRESTRIAL_TIME: f64 = 69.184;
  * - https://en.wikipedia.org/wiki/Julian_day
  * - https://en.wikipedia.org/wiki/Sunrise_equation
  */
-pub fn calculate_sunrise_sunset(epoch: i64, lat: f32, lon: f32, alt: f32) -> PartialOrFullDayNight {
+pub fn calculate_sunrise_sunset(epoch: i64, lat: f32, lon: f32, alt: f32) -> SunMovementResult {
     if lat < -90.0 || lat > 90.0 {
         panic!("Invalid latitude");
     }
@@ -52,17 +52,17 @@ pub fn calculate_sunrise_sunset(epoch: i64, lat: f32, lon: f32, alt: f32) -> Par
 
     // <-1 day
     if hour_angle_cos <= -1.0 {
-        PartialOrFullDayNight::FullDayNight(FullDayOrNight { is_day: true })
+        SunMovementResult::FullDay
     // >1 night
     } else if hour_angle_cos >= 1.0 {
-        PartialOrFullDayNight::FullDayNight(FullDayOrNight { is_day: false })
+        SunMovementResult::FullNight
     } else {
         let hour_angle = hour_angle_cos.acos().to_degrees();
 
         let sunrise = solar_transit - (hour_angle / 360.0);
         let sunset = solar_transit + (hour_angle / 360.0);
 
-        PartialOrFullDayNight::PartialDayNight(SunDetails {
+        SunMovementResult::NormalDayAndNight(NormalDayAndNight {
             sunrise_epoch: julian_converters::julian_date_to_unix_milliseconds(sunrise),
             sunset_epoch: julian_converters::julian_date_to_unix_milliseconds(sunset),
         })
@@ -81,10 +81,7 @@ mod tests {
         let alt = 10.0;
 
         let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
-        assert!(matches!(
-            result,
-            PartialOrFullDayNight::FullDayNight(FullDayOrNight { is_day: true })
-        ));
+        assert!(matches!(result, SunMovementResult::FullDay));
     }
 
     #[test]
@@ -95,10 +92,7 @@ mod tests {
         let alt = 0.0;
 
         let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
-        assert!(matches!(
-            result,
-            PartialOrFullDayNight::FullDayNight(FullDayOrNight { is_day: false })
-        ));
+        assert!(matches!(result, SunMovementResult::FullNight));
     }
 
     #[test]
@@ -109,8 +103,8 @@ mod tests {
         let alt = 0.0;
         let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
         let sun_details = match result {
-            PartialOrFullDayNight::FullDayNight(_) => unreachable!(),
-            PartialOrFullDayNight::PartialDayNight(sd) => sd,
+            SunMovementResult::NormalDayAndNight(sd) => sd,
+            _ => unreachable!(),
         };
         println!(
             "{:?} - {:?}",
@@ -127,10 +121,7 @@ mod tests {
         let lon = 0.0;
         let alt = 0.0;
         let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
-        assert!(matches!(
-            result,
-            PartialOrFullDayNight::FullDayNight(FullDayOrNight { is_day: true })
-        ));
+        assert!(matches!(result, SunMovementResult::FullDay));
     }
 
     #[test]
@@ -166,12 +157,44 @@ mod tests {
         let lon = -4.4538448;
         let alt = 0.0;
         let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
+        assert!(matches!(
+            result,
+            SunMovementResult::NormalDayAndNight(NormalDayAndNight {
+                sunrise_epoch: 1731913152254,
+                sunset_epoch: 1731949632505
+            })
+        ));
+    }
+
+    #[test]
+    fn test_almost_full_night() {
+        let epoch = 1733500500000; // 2024-12-06T16:55:00
+        let lat = 68.2992471;
+        let lon = 22.2632669;
+        let alt = 0.0;
+        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
+        assert!(matches!(
+            result,
+            SunMovementResult::NormalDayAndNight(NormalDayAndNight {
+                sunrise_epoch: 1733480122290,
+                sunset_epoch: 1733480947740
+            })
+        ))
+    }
+
+    #[test]
+    fn sunset_seems_earlier() {
+        let epoch = 1653317700000; // 2022-05-23T16:55:00
+        let lat = 68.574;
+        let lon = 23.6077;
+        let alt = 0.0;
+        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
         println!("{:?}", result);
         assert!(matches!(
             result,
-            PartialOrFullDayNight::PartialDayNight(SunDetails {
-                sunrise_epoch: 1731913152254,
-                sunset_epoch: 1731949632505
+            SunMovementResult::NormalDayAndNight(NormalDayAndNight {
+                sunrise_epoch: 1653259119108, // 2022-05-22T22:38:39.108Z
+                sunset_epoch: 1653343574951   // 2022-05-23T22:06:14.951Z
             })
         ));
     }
