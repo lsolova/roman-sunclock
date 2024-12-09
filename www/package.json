@@ -1,12 +1,13 @@
 {
   "name": "roman-sunclock",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "Roman Sun Clock",
   "main": "bootstrap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "vite build",
-    "start": "dotenv -c development -- vite dev"
+    "start": "dotenv -c development -- vite dev",
+    "generate-pwa-icons": "pwa-assets-generator --preset minimal-2023 -m=false public/rsct_logo_512.svg"
   },
   "author": "Laszlo Solova",
   "license": "UNLICENSED",
@@ -14,6 +15,7 @@
     "roman-sunclock": "../pkg"
   },
   "devDependencies": {
+    "@vite-pwa/assets-generator": "0.2.6",
     "dotenv": "16.4.5",
     "dotenv-cli": "7.4.3",
     "vite": "5.4.11",
