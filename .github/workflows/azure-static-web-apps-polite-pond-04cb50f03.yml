@@ -23,7 +23,9 @@ jobs:
       - name: Build WASM library
         run: wasm-pack build
       - name: Build web application
-        run: cd www && npm i && npm run build
+        run: cd www && npm i
+      - run: cd www && npm run generate-pwa-icons
+      - run: cd www && npm run build
         env:
           GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
       - name: Build And Deploy
