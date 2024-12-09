@@ -20,14 +20,18 @@ fn format_time_to_hours_minutes(hours: &i32, minutes: &i32) -> String {
     format!("{:0>2}:{:0>2}", hours, minutes)
 }
 
+/** Generates hour lines for the roman clock (can be used for both day and night).
+ *  First and last items are for including first and last lines. In a normal day it is not needed.
+ */
 pub fn generate_roman_clock_lines_group(
     initial_angle: &f32,
     step: f32,
+    first_item: i32,
     last_item: i32,
     stroke: &str,
 ) -> Group {
     let mut roman_clock_lines_group = Group::new().set("stroke", stroke);
-    for i in 0..last_item {
+    for i in first_item..last_item {
         let w_angle = i as f32 * step + initial_angle;
         let to_radius = if i % 3 == 0 { 107.0 } else { 113.0 };
         let from_point = calculate_point_on_circle(&w_angle, 119.0);
@@ -50,7 +54,7 @@ fn generate_full_clock(circle_stroke: &str, lines_stroke: &str) -> (Circle, Grou
         .set("stroke", circle_stroke)
         .set("stroke-width", "30");
     let roman_clock_lines_group =
-        generate_roman_clock_lines_group(&0.0, THIRTY_DEGREE_IN_RAD, 13, lines_stroke);
+        generate_roman_clock_lines_group(&0.0, THIRTY_DEGREE_IN_RAD, 0, 13, lines_stroke);
     (roman_clock_full_circle, roman_clock_lines_group)
 }
 
@@ -76,7 +80,8 @@ fn generate_normal_clock(
     let mut last_change_arc_data = Data::new().move_to(last_change_point);
     let mut next_change_arc_data = Data::new().move_to(next_change_point);
 
-    for i in 0..8 {
+    // Angle can be between -2PI - +4PI (including yesterday and tomorrow)
+    for i in -4..8 {
         let segment_angle = i as f32 * NINETY_DEGREE_IN_RAD;
         if last_change_angle < &segment_angle && &segment_angle < next_change_angle {
             // Add to last change arc
@@ -133,6 +138,7 @@ fn generate_normal_clock(
     let last_change_lines_group = generate_roman_clock_lines_group(
         last_change_angle,
         last_change_lines_step,
+        1,
         12,
         &next_stroke,
     );
@@ -140,6 +146,7 @@ fn generate_normal_clock(
     let next_change_lines_group = generate_roman_clock_lines_group(
         next_change_angle,
         next_change_lines_step,
+        1,
         12,
         &last_stroke,
     );

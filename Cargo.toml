@@ -2,7 +2,7 @@
 name = "roman-sunclock"
 description = "Roman Sunclock Time - special timezone based on local daylight"
 repository = "https://github.com/lsolova/roman-sun-clock"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Laszlo Solova <laszlo@solova.com>"]
 edition = "2021"
 
