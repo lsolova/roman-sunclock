@@ -38,28 +38,65 @@ export default defineConfig({
             src: "pwa-64x64.png",
             sizes: "64x64",
             type: "image/png",
+            // @ts-expect-error ts2353
+            color_scheme: "light",
           },
           {
             src: "pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
+            // @ts-expect-error ts2353
+            color_scheme: "light",
           },
           {
             src: "pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
+            // @ts-expect-error ts2353
+            color_scheme: "light",
           },
           {
             src: "maskable-icon-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
+            // @ts-expect-error ts2353
+            color_scheme: "light",
+          },
+          {
+            src: "pwa-64x64_white.png",
+            sizes: "64x64",
+            type: "image/png",
+            // @ts-expect-error ts2353
+            color_scheme: "dark",
+          },
+          {
+            src: "pwa-192x192_white.png",
+            sizes: "192x192",
+            type: "image/png",
+            // @ts-expect-error ts2353
+            color_scheme: "dark",
+          },
+          {
+            src: "pwa-512x512_white.png",
+            sizes: "512x512",
+            type: "image/png",
+            // @ts-expect-error ts2353
+            color_scheme: "dark",
+          },
+          {
+            src: "maskable-icon-512x512_white.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+            // @ts-expect-error ts2353
+            color_scheme: "dark",
           },
         ],
       },
       registerType: "autoUpdate",
       workbox: {
-        globPatterns: ["**/*.css,html,js,svg,wasm"],
+        globPatterns: ["**/*.{css,html,ico,js,svg,wasm}"],
       },
     }),
     wasm(),
