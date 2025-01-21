@@ -44,6 +44,13 @@ pub enum SunMovementResult {
     FullNight,
 }
 
+#[derive(Debug)]
+pub enum RiseSetInfo {
+    NormalDayAndNight(NormalDayAndNight),
+    CircumpolarDay,
+    CircumpolarNight,
+}
+
 pub struct Timeline {
     pub day_type: DayType,
     pub day_start_epoch: i64,

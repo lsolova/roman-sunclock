@@ -8,7 +8,7 @@ static JULIAN_DAY_Y2K: f64 = 2451545.0;
 static CENTER_EQUATION_COEFFICIENT: f64 = 1.9148;
 static DAY_MILLISECONDS: f64 = 86400000.0;
 static EARTH_AXIAL_TILT: f64 = 23.4397;
-static HOUR_ANGLE_COEFFICIENT_DEGREES: f64 = -0.833;
+static HOUR_ANGLE_COEFFICIENT_DEGREES: f64 = -0.8333;
 static LEAP_SECONDS_AND_TERRESTRIAL_TIME: f64 = 69.184;
 
 /**
@@ -44,6 +44,7 @@ pub fn calculate_sunrise_sunset(epoch: i64, lat: f32, lon: f32, alt: f32) -> Sun
     let solar_transit = JULIAN_DAY_Y2K + mean_solar_time + equation_of_time; // Local solar noon
     let declination_of_sun_sin = ecliptic_longitude_rad.sin() * EARTH_AXIAL_TILT.to_radians().sin();
     let declination_of_sun_rad = declination_of_sun_sin.asin();
+    println!("Dec {:?}", declination_of_sun_rad.to_degrees());
     let elevation_correction_rad =
         (HOUR_ANGLE_COEFFICIENT_DEGREES - 2.076 * (alt as f64).sqrt() / 60.0).to_radians();
     let hour_angle_cos = (elevation_correction_rad.sin()
@@ -197,5 +198,11 @@ mod tests {
                 sunset_epoch: 1653343574951   // 2022-05-23T22:06:14.951Z
             })
         ));
+    }
+
+    #[test]
+    fn comparison_test() {
+        let result = calculate_sunrise_sunset(1737317257979, 36.695063085114654, -4.4538146350563546, 0.0);
+println!("{:?}", result);
     }
 }

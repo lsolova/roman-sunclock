@@ -9,6 +9,7 @@ use point_utils::calculate_point_on_circle;
 use roman_clock_generator::generate_roman_clock_group;
 use std::string::String;
 use svg::{node::element::Circle, Document};
+use web_sys::console;
 
 mod angle_calculator;
 mod base_clock_generator;
@@ -49,6 +50,10 @@ pub fn generate_svg_clock(
         next_change_epoch - timezone_offset_millis as i64,
         day_start,
     );
+
+    console::log_2(&"Now angle".into(), &now_angle.into());
+    console::log_2(&"Last change angle".into(), &last_change_angle.into());
+    console::log_2(&"Next change angle".into(), &next_change_angle.into());
 
     let now_point = calculate_point_on_circle(&now_angle, 102.0);
 

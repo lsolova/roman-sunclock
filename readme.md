@@ -26,16 +26,28 @@ For a certain point on earth, it is possible to provide GPS coordinates in the U
 
 > Note: If location is defined such a way, local time might be inaccurate, due to timezone differences.
 
+## Under the hood
+
+This application uses astronomical calculations to calculate sunrise, sunset (Sun's position relative to observer's horizon), moonrise, moonset (Moon's position relative to observer's horizon) and illuminated fraction of Moon (illuminated area of the Moon visible from Earth).
+
+Calculations are based on [Julian Day Number (JDN)][4].
+
 ## Resources
 
+- Astronomical Algorithms (second edition) by Jean Meeus
+- [Astronomical Calculations: Solar Coordinates by James Still](https://squarewidget.com/solar-coordinates/)
 - [BBC article][1]
-- Original icons from [iconfinder](https://www.iconfinder.com)
+- [Celestial programming](https://celestialprogramming.com/) site by Greg Miller
 - [MDN: Geolocation coordinates](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates)
+- Original icons from [iconfinder](https://www.iconfinder.com)
 - [Rust WASM book](https://rustwasm.github.io/docs/book/)
-- [Wikipedia: Julian day](https://en.wikipedia.org/wiki/Julian_day)
-- [Wikipedia: Sunrise equation](https://en.wikipedia.org/wiki/Sunrise_equation)
+- [Wikipedia: Elongation](https://en.wikipedia.org/wiki/Elongation_(astronomy))
+- [Wikipedia: Julian day][4]
+- [Wikipedia: Position of the Sun](https://en.wikipedia.org/wiki/Position_of_the_Sun)
 - [Wikipedia: Roman timekeeping][2]
+- [Wikipedia: Sunrise equation](https://en.wikipedia.org/wiki/Sunrise_equation)
 
 [1]: https://www.bbc.com/future/article/20240328-the-ancient-roman-alternative-to-daylight-savings-time
 [2]: https://en.m.wikipedia.org/wiki/Roman_timekeeping
 [3]: https://rsct.solova.com
+[4]: https://en.wikipedia.org/wiki/Julian_day

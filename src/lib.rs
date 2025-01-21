@@ -2,6 +2,7 @@ use svg_clock_generator::generate_svg_clock;
 use wasm_types::RomanSunclockResult;
 use wasm_bindgen::prelude::*;
 
+mod celestial_calculations;
 mod sun_calculator;
 mod sun_time_calculator;
 mod svg_clock_generator;
