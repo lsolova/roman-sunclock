@@ -1,5 +1,5 @@
 use crate::{
-    time_calculators::get_day_start,
+    time_info::TimeInfo,
     wasm_types::{DayType, RomanTimeDetails},
 };
 use base_clock_generator::generate_base_clock;
@@ -18,16 +18,18 @@ mod point_utils;
 mod roman_clock_generator;
 
 pub fn generate_svg_clock(
-    requested_epoch: i64,
-    timezone_offset: i32,
+    time_info: &TimeInfo,
     roman_time_details: &RomanTimeDetails,
 ) -> String {
+    let timezone_offset = time_info.timezone_offset;
+    let requested_epoch = time_info.current_unix_epoch;
+    let day_start = time_info.day_start_unix_epoch;
+    
     let timezone_offset_millis = match roman_time_details.day_type {
-        DayType::FullDay => 0,
-        DayType::FullNight => 0,
+        DayType::CircumpolarDay => 0,
+        DayType::CircumpolarNight => 0,
         _ => timezone_offset * 60000,
     };
-    let day_start = get_day_start(requested_epoch);
     let last_change_epoch = match roman_time_details.last_sun_change {
         Some(lsc) => lsc,
         None => 0,
@@ -95,8 +97,7 @@ mod tests {
         println!(
             "{:?}",
             generate_svg_clock(
-                1733162814475,
-                -60,
+                &TimeInfo::from(1733162814475).set_timezone_offset(-60),
                 &RomanTimeDetails {
                     hours: 15,
                     minutes: 45,

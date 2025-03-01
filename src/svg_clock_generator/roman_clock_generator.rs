@@ -169,14 +169,14 @@ pub fn generate_roman_clock_group(
 ) -> Group {
     let mut roman_clock_group = Group::new();
     match day_type {
-        DayType::FullDay => {
+        DayType::CircumpolarDay => {
             let (day_circle, day_lines) =
                 generate_full_clock("var(--day-color)", "var(--night-color)");
 
             roman_clock_group.append(day_circle);
             roman_clock_group.append(day_lines);
         }
-        DayType::FullNight => {
+        DayType::CircumpolarNight => {
             let (night_circle, night_lines) =
                 generate_full_clock("var(--night-color)", "var(--day-color)");
 

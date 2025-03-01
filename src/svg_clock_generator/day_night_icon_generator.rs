@@ -73,8 +73,8 @@ fn generate_moon_icon() -> Group {
 
 pub fn generate_icon(day_type: &DayType) -> Group {
     match day_type {
-        DayType::FullDay => generate_sun_icon(),
-        DayType::FullNight => generate_moon_icon(),
+        DayType::CircumpolarDay => generate_sun_icon(),
+        DayType::CircumpolarNight => generate_moon_icon(),
         DayType::NormalDay => generate_sun_icon(),
         DayType::NormalNight => generate_moon_icon(),
         DayType::__Invalid => Group::new(),

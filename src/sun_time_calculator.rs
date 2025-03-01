@@ -1,28 +1,32 @@
+use crate::julian_converters::julian_date_to_unix_milliseconds;
 use crate::sun_calculator::calculate_sunrise_sunset;
-use crate::time_calculators::get_day_start;
-use crate::types::{PointOfTime, SunMovementResult, TimeType, Timeline};
+use crate::time_info::TimeInfo;
+use crate::types::{GeoLocation, PointOfTime, RiseSetInfo, TimeType, Timeline};
 use crate::wasm_types::{DayType, RomanTimeDetails};
 use std::cmp::{max, min};
 
 static DAY_MILLISECONDS: i64 = 86400000;
 
-fn build_timeline(requested_epoch: i64, lat: f32, lon: f32, alt: f32) -> Timeline {
+fn build_timeline(time_info: &TimeInfo, location: &GeoLocation) -> Timeline {
     let mut day_type;
 
-    let day_start_epoch = get_day_start(requested_epoch);
+    let current_epoch = time_info.current_unix_epoch;
+    let day_start_epoch = time_info.day_start_unix_epoch;
     let mut last_sun_change: Option<PointOfTime> = None;
     let mut next_sun_change: Option<PointOfTime> = None;
 
-    match calculate_sunrise_sunset(requested_epoch, lat, lon, alt) {
-        SunMovementResult::NormalDayAndNight(n) => {
+    match calculate_sunrise_sunset(time_info, location) {
+        RiseSetInfo::NormalDayAndNight(n) => {
             // Get the closest to requested (max)
             let mut last_sun_change_epoch = i64::MIN;
             let mut last_sun_change_time_type = TimeType::Sunrise;
-            if n.sunrise_epoch < requested_epoch && last_sun_change_epoch < n.sunrise_epoch {
-                last_sun_change_epoch = n.sunrise_epoch;
+            let sunrise_epoch = julian_date_to_unix_milliseconds(n.rise_time);
+            let sunset_epoch = julian_date_to_unix_milliseconds(n.set_time);
+            if sunrise_epoch < current_epoch && last_sun_change_epoch < sunrise_epoch {
+                last_sun_change_epoch = sunrise_epoch;
             }
-            if n.sunset_epoch < requested_epoch && last_sun_change_epoch < n.sunset_epoch {
-                last_sun_change_epoch = n.sunset_epoch;
+            if sunset_epoch < current_epoch && last_sun_change_epoch < sunset_epoch {
+                last_sun_change_epoch = sunset_epoch;
                 last_sun_change_time_type = TimeType::Sunset;
             }
 
@@ -36,11 +40,11 @@ fn build_timeline(requested_epoch: i64, lat: f32, lon: f32, alt: f32) -> Timelin
             // Get the closest (min)
             let mut next_sun_change_epoch = i64::MAX;
             let mut next_sun_change_time_type = TimeType::Sunrise;
-            if requested_epoch < n.sunrise_epoch && n.sunrise_epoch < next_sun_change_epoch {
-                next_sun_change_epoch = n.sunrise_epoch;
+            if current_epoch < sunrise_epoch && sunrise_epoch < next_sun_change_epoch {
+                next_sun_change_epoch = sunrise_epoch;
             }
-            if requested_epoch < n.sunset_epoch && n.sunset_epoch < next_sun_change_epoch {
-                next_sun_change_epoch = n.sunset_epoch;
+            if current_epoch < sunset_epoch && sunset_epoch < next_sun_change_epoch {
+                next_sun_change_epoch = sunset_epoch;
                 next_sun_change_time_type = TimeType::Sunset;
             }
             if next_sun_change_epoch < i64::MAX {
@@ -52,64 +56,68 @@ fn build_timeline(requested_epoch: i64, lat: f32, lon: f32, alt: f32) -> Timelin
 
             day_type = DayType::NormalDay;
         }
-        SunMovementResult::FullDay => {
-            day_type = DayType::FullDay;
+        RiseSetInfo::CircumpolarDay => {
+            day_type = DayType::CircumpolarDay;
         }
-        SunMovementResult::FullNight => {
-            day_type = DayType::FullNight;
+        RiseSetInfo::CircumpolarNight => {
+            day_type = DayType::CircumpolarNight;
         }
     };
 
     // Read yesterday if needed
     let check_yesterday = if let Some(v) = last_sun_change {
-        requested_epoch < v.epoch
+        current_epoch < v.epoch
     } else {
         true
     };
     if check_yesterday {
-        match calculate_sunrise_sunset(requested_epoch - DAY_MILLISECONDS, lat, lon, alt) {
-            SunMovementResult::NormalDayAndNight(n) => {
+        match calculate_sunrise_sunset(&TimeInfo::from(current_epoch - DAY_MILLISECONDS), location) {
+            RiseSetInfo::NormalDayAndNight(n) => {
+                let sunrise_epoch = julian_date_to_unix_milliseconds(n.rise_time);
+                let sunset_epoch = julian_date_to_unix_milliseconds(n.set_time);
                 last_sun_change = Some(PointOfTime {
-                    time_type: if n.sunrise_epoch < n.sunset_epoch {
+                    time_type: if sunrise_epoch < sunset_epoch {
                         TimeType::Sunset
                     } else {
                         TimeType::Sunrise
                     },
-                    epoch: max(n.sunrise_epoch, n.sunset_epoch),
+                    epoch: max(sunrise_epoch, sunset_epoch),
                 });
             }
-            SunMovementResult::FullDay => {
-                day_type = DayType::FullDay;
+            RiseSetInfo::CircumpolarDay => {
+                day_type = DayType::CircumpolarDay;
             }
-            SunMovementResult::FullNight => {
-                day_type = DayType::FullNight;
+            RiseSetInfo::CircumpolarNight => {
+                day_type = DayType::CircumpolarNight;
             }
         };
     }
 
     // Read tomorrow if needed
     let check_tomorrow = if let Some(v) = next_sun_change {
-        v.epoch < requested_epoch
+        v.epoch < current_epoch
     } else {
         true
     };
     if check_tomorrow {
-        match calculate_sunrise_sunset(requested_epoch + DAY_MILLISECONDS, lat, lon, alt) {
-            SunMovementResult::NormalDayAndNight(n) => {
+        match calculate_sunrise_sunset(&TimeInfo::from(current_epoch + DAY_MILLISECONDS), location) {
+            RiseSetInfo::NormalDayAndNight(n) => {
+                let sunrise_epoch = julian_date_to_unix_milliseconds(n.rise_time);
+                let sunset_epoch = julian_date_to_unix_milliseconds(n.set_time);
                 next_sun_change = Some(PointOfTime {
-                    time_type: if n.sunrise_epoch < n.sunset_epoch {
+                    time_type: if sunrise_epoch < sunset_epoch {
                         TimeType::Sunrise
                     } else {
                         TimeType::Sunset
                     },
-                    epoch: min(n.sunrise_epoch, n.sunset_epoch),
+                    epoch: min(sunrise_epoch, sunset_epoch),
                 });
             }
-            SunMovementResult::FullDay => {
-                day_type = DayType::FullDay;
+            RiseSetInfo::CircumpolarDay => {
+                day_type = DayType::CircumpolarDay;
             }
-            SunMovementResult::FullNight => {
-                day_type = DayType::FullNight;
+            RiseSetInfo::CircumpolarNight => {
+                day_type = DayType::CircumpolarNight;
             }
         };
     }
@@ -123,19 +131,18 @@ fn build_timeline(requested_epoch: i64, lat: f32, lon: f32, alt: f32) -> Timelin
 }
 
 pub fn calculate_roman_sun_time(
-    requested_epoch: i64,
-    lat: f32,
-    lon: f32,
-    alt: f32,
+    time_info: &TimeInfo,
+    location: &GeoLocation
 ) -> RomanTimeDetails {
-    let timeline = build_timeline(requested_epoch, lat, lon, alt);
+    let timeline = build_timeline(&time_info, location);
+    let current_epoch = time_info.current_unix_epoch;
 
     let (roman_minute_length, duration_since_lc, clock_start, day_type) =
         match (timeline.last_sun_change, timeline.next_sun_change) {
             (Some(lc), Some(nc)) => {
                 let lc_epoch = lc.epoch;
                 let roman_minute_length = (nc.epoch - lc_epoch) / 720;
-                let duration_since_lc = requested_epoch - min(nc.epoch, lc_epoch);
+                let duration_since_lc = current_epoch - min(nc.epoch, lc_epoch);
                 let clock_start = if lc.time_type == TimeType::Sunrise {
                     6
                 } else {
@@ -155,12 +162,12 @@ pub fn calculate_roman_sun_time(
             }
             _ => {
                 let roman_minute_length = 120000;
-                let duration_since_lc = requested_epoch - timeline.day_start_epoch;
+                let duration_since_lc = current_epoch - timeline.day_start_epoch;
                 println!(
                     "duration since {} in {}, d: {}",
-                    requested_epoch, timeline.day_start_epoch, duration_since_lc
+                    current_epoch, timeline.day_start_epoch, duration_since_lc
                 );
-                let clock_start = if timeline.day_type == DayType::FullDay {
+                let clock_start = if timeline.day_type == DayType::CircumpolarDay {
                     6
                 } else {
                     18
@@ -207,7 +214,7 @@ mod tests {
     fn test_midnight_day_start() {
         // Fri, 10 Jun 2022 00:00:00.000 GMT
         assert_eq!(
-            calculate_roman_sun_time(1654819200000, LAT, LON, ALT),
+            calculate_roman_sun_time(&TimeInfo::from(1654819200000), &GeoLocation::new(LAT, LON, ALT)),
             RomanTimeDetails {
                 hours: 23,
                 minutes: 38,
@@ -223,7 +230,7 @@ mod tests {
     fn test_midnight_day_end_summer() {
         // Fri, 10 Jun 2022 23:59:59.999 GMT
         assert_eq!(
-            calculate_roman_sun_time(1654905599999, LAT, LON, ALT),
+            calculate_roman_sun_time(&TimeInfo::from(1654905599999), &GeoLocation::new(LAT, LON, ALT)),
             RomanTimeDetails {
                 hours: 23,
                 minutes: 37,
@@ -239,7 +246,7 @@ mod tests {
     fn test_close_day_end_winter() {
         // Thu, 10 Nov 2022 22:50:00 GMT, Budapest
         assert_eq!(
-            calculate_roman_sun_time(1668120600000, 47.49801, 19.03991, ALT),
+            calculate_roman_sun_time(&TimeInfo::from(1668120600000), &GeoLocation::new(47.49801, 19.03991, ALT)),
             RomanTimeDetails {
                 hours: 0,
                 minutes: 17,
@@ -255,7 +262,7 @@ mod tests {
     fn test_midday() {
         // Fri, 10 Jun 2022 08:00:00 GMT
         assert_eq!(
-            calculate_roman_sun_time(1654848000000, LAT, LON, ALT),
+            calculate_roman_sun_time(&TimeInfo::from(1654848000000), &GeoLocation::new(LAT, LON, ALT)),
             RomanTimeDetails {
                 hours: 8,
                 minutes: 28,
@@ -275,7 +282,7 @@ mod tests {
     fn test_evening_bug_of_infinite_loop() {
         // Mon, 18 Nov 2024 18:05:50 GMT, Málaga (spec)
         assert_eq!(
-            calculate_roman_sun_time(1731953150610, 36.6952287, -4.4538448, 0.0),
+            calculate_roman_sun_time(&TimeInfo::from(1731953150610), &GeoLocation::new(36.6952287, -4.4538448, 0.0)),
             RomanTimeDetails {
                 hours: 18,
                 minutes: 50,
@@ -291,7 +298,7 @@ mod tests {
     fn test_evening_bug_of_displayed_hour_24() {
         // Wed, 20 Nov 2024 00:25:00 GMT+0100, Málaga (spec)
         assert_eq!(
-            calculate_roman_sun_time(1732058700000, 36.6952287, -4.4538448, 0.0),
+            calculate_roman_sun_time(&TimeInfo::from(1732058700000), &GeoLocation::new(36.6952287, -4.4538448, 0.0)),
             RomanTimeDetails {
                 hours: 23,
                 minutes: 26,
@@ -309,7 +316,7 @@ mod tests {
         let lat = 68.2992471;
         let lon = 22.2632669;
         let alt = 0.0;
-        let result = calculate_roman_sun_time(epoch, lat, lon, alt);
+        let result = calculate_roman_sun_time(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
         assert_eq!(
             result,
             RomanTimeDetails {
@@ -318,7 +325,7 @@ mod tests {
                 last_sun_change: Some(1733480947740), // 2024-12-06T10:29:07.740Z
                 next_sun_change: None,
                 minute_length: 120.0,
-                day_type: DayType::FullNight,
+                day_type: DayType::CircumpolarNight,
             }
         );
     }

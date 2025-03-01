@@ -2,7 +2,7 @@
 name = "roman-sunclock"
 description = "Roman Sunclock Time - special timezone based on local daylight"
 repository = "https://github.com/lsolova/roman-sun-clock"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Laszlo Solova <laszlo@solova.com>"]
 edition = "2021"
 
@@ -10,12 +10,17 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-chrono = "0.4.38"
+chrono = "0.4.39"
 svg = "0.18.0"
-wasm-bindgen = "0.2.97"
+vsop87 = "3.0.0"
+wasm-bindgen = "0.2.100"
+
+[dependencies.web-sys]
+version = "0.3.77"
+features = ["console"]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.45"
+wasm-bindgen-test = "0.3.50"
 
 [profile.release]
 opt-level = "s"

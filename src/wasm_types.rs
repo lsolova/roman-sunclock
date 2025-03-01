@@ -4,8 +4,8 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum DayType {
-    FullDay = "fullDay",
-    FullNight = "fullNight",
+    CircumpolarDay = "circumpolarDay",
+    CircumpolarNight = "circumpolarNight",
     NormalDay = "normalDay",
     NormalNight = "normalNight",
 }

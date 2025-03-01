@@ -50,8 +50,8 @@ function updateCurrentRomanSunTime(
   const locationDetailsElement = document.getElementById("scDetails");
   const localNameElement = locationName ? `<span>${locationName}</span>` : "";
   const timeInfo = {
-    "fullDay": "daytime only",
-    "fullNight": "nighttime only",
+    "circumpolarDay": "daytime only",
+    "circumpolarNight": "nighttime only",
     "normalDay": "daytime: %time%",
     "normalNight": "nighttime: %time%",
   }[romanSunTimeDetails.day_type].replace("%time%", `${lastSunChangeTime} - ${nextSunChangeTime}`);
