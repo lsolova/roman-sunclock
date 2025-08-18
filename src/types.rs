@@ -19,7 +19,7 @@ impl GeoLocation {
         GeoLocation { lat,lon,alt }
     }
     pub fn lat(&self) -> f32 { self.lat }
-    pub fn lon(&self) -> f32 { self.lat }
+    pub fn lon(&self) -> f32 { self.lon }
     pub fn alt(&self) -> f32 { self.alt }
 }
 

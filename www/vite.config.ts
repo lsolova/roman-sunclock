@@ -93,6 +93,7 @@ export default defineConfig({
             color_scheme: "dark",
           },
         ],
+        theme_color: "#FFF"
       },
       registerType: "autoUpdate",
       workbox: {

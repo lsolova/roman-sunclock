@@ -34,16 +34,18 @@ Calculations are based on [Julian Day Number (JDN)][4].
 
 ## Resources
 
-- Earth-Moon comparison https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html   
+- [Ancient roman alternative to daylight savings time by BBC][1]
 - Astronomical Algorithms (second edition) by Jean Meeus
 - [Astronomical Calculations: Solar Coordinates by James Still](https://squarewidget.com/solar-coordinates/)
-- [BBC article][1]
+- Astronomy on the Personal Computer by Montenbruck and Pfleger
 - [Celestial programming](https://celestialprogramming.com/) site by Greg Miller
+- [Earth-Moon comparison](https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html)
 - [MDN: Geolocation coordinates](https://developer.mozilla.org/en-US/docs/Web/API/GeolocationCoordinates)
 - Original icons from [iconfinder](https://www.iconfinder.com)
 - [Rust WASM book](https://rustwasm.github.io/docs/book/)
 - [Wikipedia: Elongation](https://en.wikipedia.org/wiki/Elongation_(astronomy))
 - [Wikipedia: Julian day][4]
+- [Wikipedia: Moon](https://en.wikipedia.org/wiki/Orbit_of_the_Moon)
 - [Wikipedia: Position of the Sun](https://en.wikipedia.org/wiki/Position_of_the_Sun)
 - [Wikipedia: Roman timekeeping][2]
 - [Wikipedia: Sunrise equation](https://en.wikipedia.org/wiki/Sunrise_equation)

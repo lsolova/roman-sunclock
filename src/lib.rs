@@ -4,13 +4,17 @@ use types::GeoLocation;
 use wasm_bindgen::prelude::*;
 use wasm_types::RomanSunclockResult;
 
+mod coordinates;
+mod earth;
 mod julian_converters;
 mod rise_set;
+mod sun;
 mod sun_calculator;
 mod sun_time_calculator;
 mod svg_clock_generator;
 mod time_info;
 mod types;
+mod utils;
 mod wasm_types;
 
 #[wasm_bindgen]

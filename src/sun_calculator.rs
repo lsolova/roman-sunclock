@@ -1,76 +1,49 @@
-use crate::types::{NormalDayAndNight, SunMovementResult};
-
-mod julian_converters;
-
-static ARGUMENT_OF_PERIAPSIS: f64 = 102.9372;
-/** Julian day count of 1 January 2000 */
-static JULIAN_DAY_Y2K: f64 = 2451545.0;
-static CENTER_EQUATION_COEFFICIENT: f64 = 1.9148;
-static DAY_MILLISECONDS: f64 = 86400000.0;
-static EARTH_AXIAL_TILT: f64 = 23.4397;
-static HOUR_ANGLE_COEFFICIENT_DEGREES: f64 = -0.833;
-static LEAP_SECONDS_AND_TERRESTRIAL_TIME: f64 = 69.184;
+use crate::{
+    earth::EarthState,
+    rise_set::{self, calculate_rise_set, calculate_rise_set_v2},
+    sun::{calculate_sun_state, SUN_GEOMETRIC_ALTITUDE_OF_BODY_CENTER},
+    time_info::TimeInfo,
+    types::{GeoLocation, RiseSetInfo},
+};
 
 /**
  * Sources:
  * - https://en.wikipedia.org/wiki/Julian_day
  * - https://en.wikipedia.org/wiki/Sunrise_equation
  */
-pub fn calculate_sunrise_sunset(epoch: i64, lat: f32, lon: f32, alt: f32) -> SunMovementResult {
-    if lat < -90.0 || lat > 90.0 {
-        panic!("Invalid latitude");
-    }
-    if lon < -180.0 || lon > 180.0 {
-        panic!("Invalid longitude");
-    }
+pub fn calculate_sunrise_sunset(time_info: &TimeInfo, location: &GeoLocation) -> RiseSetInfo {
+    let lat_rad = (location.lat() as f64).to_radians();
+    let alt = location.alt() as f64;
+    let earth_state = EarthState::from(time_info.current_julian_century);
 
-    let lat_rad = (lat as f64).to_radians();
-
-    let current_julian_date = julian_converters::unix_milliseconds_to_julian_date(epoch);
-    let fractional_julian_day = LEAP_SECONDS_AND_TERRESTRIAL_TIME / DAY_MILLISECONDS;
-    let current_julian_day = (current_julian_date - JULIAN_DAY_Y2K + fractional_julian_day).round();
-
-    let mean_solar_time = current_julian_day - f64::from(lon / 360.0);
-    let solar_mean_anomaly = (357.5291 + (0.98560028 * mean_solar_time)).rem_euclid(360.0);
-    let solar_mean_anomaly_rad = solar_mean_anomaly.to_radians();
-    let equation_of_center = CENTER_EQUATION_COEFFICIENT * solar_mean_anomaly_rad.sin()
-        + 0.02 * (2.0 * solar_mean_anomaly_rad).sin()
-        + 0.0003 * (3.0 * solar_mean_anomaly_rad).sin();
-    let ecliptic_longitude =
-        (solar_mean_anomaly + equation_of_center + 180.0 + ARGUMENT_OF_PERIAPSIS).rem_euclid(360.0);
-    let ecliptic_longitude_rad = ecliptic_longitude.to_radians();
-    let equation_of_time =
-        0.0053 * solar_mean_anomaly_rad.sin() - 0.0069 * (2.0 * ecliptic_longitude_rad).sin();
-    let solar_transit = JULIAN_DAY_Y2K + mean_solar_time + equation_of_time; // Local solar noon
-    let declination_of_sun_sin = ecliptic_longitude_rad.sin() * EARTH_AXIAL_TILT.to_radians().sin();
-    let declination_of_sun_rad = declination_of_sun_sin.asin();
+    let sun_state = calculate_sun_state(time_info, location, &earth_state);
+    println!("{:?}", sun_state);
     let elevation_correction_rad =
-        (HOUR_ANGLE_COEFFICIENT_DEGREES - 2.076 * (alt as f64).sqrt() / 60.0).to_radians();
-    let hour_angle_cos = (elevation_correction_rad.sin()
-        - (lat_rad.sin() * declination_of_sun_sin))
-        / (lat_rad.cos() * declination_of_sun_rad.cos());
+        (SUN_GEOMETRIC_ALTITUDE_OF_BODY_CENTER - 2.076 * alt.sqrt() / 60.0).to_radians();
 
-    // <-1 day
-    if hour_angle_cos <= -1.0 {
-        SunMovementResult::FullDay
-    // >1 night
-    } else if hour_angle_cos >= 1.0 {
-        SunMovementResult::FullNight
-    } else {
-        let hour_angle = hour_angle_cos.acos().to_degrees();
-
-        let sunrise = solar_transit - (hour_angle / 360.0);
-        let sunset = solar_transit + (hour_angle / 360.0);
-
-        SunMovementResult::NormalDayAndNight(NormalDayAndNight {
-            sunrise_epoch: julian_converters::julian_date_to_unix_milliseconds(sunrise),
-            sunset_epoch: julian_converters::julian_date_to_unix_milliseconds(sunset),
-        })
-    }
+    let rise_set_v1 = calculate_rise_set(
+        sun_state.declination,
+        elevation_correction_rad,
+        lat_rad,
+        sun_state.local_solar_noon_time,
+    );
+    println!("{:?}", rise_set_v1);
+    let rise_set_v2 = calculate_rise_set_v2(
+        sun_state.right_ascension,
+        sun_state.declination,
+        sun_state.local_solar_noon_time,
+        location.lat(),
+        location.lon(),
+        SUN_GEOMETRIC_ALTITUDE_OF_BODY_CENTER,
+    );
+    println!("{:?}", rise_set_v2);
+    rise_set_v1
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::types::NormalDayAndNight;
+
     use super::*;
 
     #[test]
@@ -80,8 +53,9 @@ mod tests {
         let lon = 24.6657;
         let alt = 10.0;
 
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
-        assert!(matches!(result, SunMovementResult::FullDay));
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
+        assert!(matches!(result, RiseSetInfo::CircumpolarDay));
     }
 
     #[test]
@@ -91,8 +65,9 @@ mod tests {
         let lon = 0.0;
         let alt = 0.0;
 
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
-        assert!(matches!(result, SunMovementResult::FullNight));
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
+        assert!(matches!(result, RiseSetInfo::CircumpolarNight));
     }
 
     #[test]
@@ -101,17 +76,15 @@ mod tests {
         let lat = 0.0; // Equator
         let lon = 0.0;
         let alt = 0.0;
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
         let sun_details = match result {
-            SunMovementResult::NormalDayAndNight(sd) => sd,
+            RiseSetInfo::NormalDayAndNight(sd) => sd,
             _ => unreachable!(),
         };
-        println!(
-            "{:?} - {:?}",
-            sun_details.sunrise_epoch, sun_details.sunset_epoch
-        );
-        assert_eq!(sun_details.sunrise_epoch, 1648879207642); // Sat, 02 Apr 2022 06:00:07 GMT / SunCalc.org: 06:00:03
-        assert_eq!(sun_details.sunset_epoch, 1648922808939); // Sat, 02 Apr 2022 18:06:48 GMT / SunCalc.org: 18:07:05
+        println!("{:?} - {:?}", sun_details.rise_time, sun_details.set_time);
+        assert_eq!(sun_details.rise_time, 1648879207642.0); // Sat, 02 Apr 2022 06:00:07 GMT / SunCalc.org: 06:00:03
+        assert_eq!(sun_details.set_time, 1648922808939.0); // Sat, 02 Apr 2022 18:06:48 GMT / SunCalc.org: 18:07:05
     }
 
     #[test]
@@ -120,8 +93,9 @@ mod tests {
         let lat = 80.0; // High in the northern hemisphere
         let lon = 0.0;
         let alt = 0.0;
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
-        assert!(matches!(result, SunMovementResult::FullDay));
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
+        assert!(matches!(result, RiseSetInfo::CircumpolarDay));
     }
 
     #[test]
@@ -130,7 +104,9 @@ mod tests {
         let lat = 100.0; // Invalid latitude, should be within [-90, 90]
         let lon = 0.0;
         let alt = 0.0;
-        let result = std::panic::catch_unwind(|| calculate_sunrise_sunset(epoch, lat, lon, alt));
+        let result = std::panic::catch_unwind(|| {
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt))
+        });
         assert!(
             result.is_err(),
             "Function should panic with invalid latitude."
@@ -143,7 +119,9 @@ mod tests {
         let lat = 45.0;
         let lon = 200.0; // Invalid longitude, should be within [-180, 180]
         let alt = 0.0;
-        let result = std::panic::catch_unwind(|| calculate_sunrise_sunset(epoch, lat, lon, alt));
+        let result = std::panic::catch_unwind(|| {
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt))
+        });
         assert!(
             result.is_err(),
             "Function should panic with invalid longitude."
@@ -156,12 +134,13 @@ mod tests {
         let lat = 36.6952287;
         let lon = -4.4538448;
         let alt = 0.0;
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
         assert!(matches!(
             result,
-            SunMovementResult::NormalDayAndNight(NormalDayAndNight {
-                sunrise_epoch: 1731913152254,
-                sunset_epoch: 1731949632505
+            RiseSetInfo::NormalDayAndNight(NormalDayAndNight {
+                rise_time: 1731913152254.0,
+                set_time: 1731949632505.0
             })
         ));
     }
@@ -172,12 +151,13 @@ mod tests {
         let lat = 68.2992471;
         let lon = 22.2632669;
         let alt = 0.0;
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
         assert!(matches!(
             result,
-            SunMovementResult::NormalDayAndNight(NormalDayAndNight {
-                sunrise_epoch: 1733480122290,
-                sunset_epoch: 1733480947740
+            RiseSetInfo::NormalDayAndNight(NormalDayAndNight {
+                rise_time: 1733480122290.0,
+                set_time: 1733480947740.0
             })
         ))
     }
@@ -188,13 +168,14 @@ mod tests {
         let lat = 68.574;
         let lon = 23.6077;
         let alt = 0.0;
-        let result = calculate_sunrise_sunset(epoch, lat, lon, alt);
+        let result =
+            calculate_sunrise_sunset(&TimeInfo::from(epoch), &GeoLocation::new(lat, lon, alt));
         println!("{:?}", result);
         assert!(matches!(
             result,
-            SunMovementResult::NormalDayAndNight(NormalDayAndNight {
-                sunrise_epoch: 1653259119108, // 2022-05-22T22:38:39.108Z
-                sunset_epoch: 1653343574951   // 2022-05-23T22:06:14.951Z
+            RiseSetInfo::NormalDayAndNight(NormalDayAndNight {
+                rise_time: 1653259119108.0, // 2022-05-22T22:38:39.108Z
+                set_time: 1653343574951.0   // 2022-05-23T22:06:14.951Z
             })
         ));
     }
